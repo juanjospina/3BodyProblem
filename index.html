@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Remembrance of Earth's Past · Map</title>
+<style>
+:root{--bg:#06070c;--panel:#0f121b;--line:#222839;--text:#e7e9f0;--muted:#8a90a6;--band1:#0b0e17;--band2:#0e1220;--nf:#e50914}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg) radial-gradient(ellipse at 70% -20%,#1a1f3a 0,transparent 60%);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:10px 16px;border-bottom:1px solid var(--line)}
+h1{font:600 17px/1.1 Georgia,serif;margin:0;letter-spacing:.02em}
+h1 small{display:block;font:12px system-ui;color:var(--muted);letter-spacing:0}
+#tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px}
+#tabs button{padding:6px 14px;border-radius:7px;color:var(--muted)}
+#tabs button.on{background:#1d2335;color:var(--text)}
+#filters{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-left:auto}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--line);border-radius:999px;cursor:pointer;user-select:none;font-size:13px;color:var(--muted)}
+.chip input{display:none}
+.chip:has(input:checked){color:var(--text);border-color:var(--c);background:color-mix(in srgb,var(--c) 15%,transparent)}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--c)}
+.chip img{height:16px;border-radius:3px}
+#search{background:var(--panel);border:1px solid var(--line);border-radius:999px;color:var(--text);padding:5px 12px;width:150px;font:inherit}
+main{flex:1;position:relative;min-height:0}
+.view{position:absolute;inset:0}
+.view svg{width:100%;height:100%;display:block;cursor:grab}
+.view svg:active{cursor:grabbing}
+.hint{position:absolute;left:16px;bottom:10px;color:var(--muted);font-size:12px;pointer-events:none}
+.zoomctl{position:absolute;right:16px;bottom:44px;display:flex;flex-direction:column;gap:4px}
+.zoomctl button{width:32px;height:32px;border:1px solid var(--line);background:var(--panel);border-radius:8px;font-size:16px}
+/* timeline */
+.era rect{cursor:zoom-in}
+.era text{fill:#c7cbe0;font:600 13px Georgia,serif;pointer-events:none}
+.era text.sub{fill:var(--muted);font:11px system-ui}
+.tick line{stroke:#1c2132}
+.tick text{fill:var(--muted);font-size:11px}
+.lane line{stroke-width:2;stroke-opacity:.35}
+.lane text{font:600 11px system-ui;letter-spacing:.08em;text-transform:uppercase}
+.ev{cursor:pointer}
+.ev circle{stroke:var(--bg);stroke-width:2;transition:r .15s}
+.ev circle.nfring{fill:none;stroke:var(--nf);stroke-width:1.5}
+.ev:hover circle.dot{r:10}
+.ev text{fill:var(--text);font-size:12px;paint-order:stroke;stroke:var(--bg);stroke-width:4px}
+.ev line{stroke:#39405a}
+.ev.dim,.node.dim{opacity:.15}
+.ev.sel circle.dot{stroke:#fff}
+/* network */
+.link{stroke:#2e3550;stroke-width:1.5}
+.link.nfo{stroke-dasharray:4 4}
+.link.hi{stroke:#aab3d6;stroke-width:2.2}
+.link.dim{opacity:.1}
+.llabel{fill:#c9cfe6;font-size:11px;text-anchor:middle;paint-order:stroke;stroke:var(--bg);stroke-width:4px;pointer-events:none}
+.node{cursor:pointer}
+.node circle{stroke:var(--bg);stroke-width:3}
+.node.sel circle{stroke:#fff}
+.node text{text-anchor:middle;pointer-events:none;paint-order:stroke;stroke:var(--bg);stroke-width:4px}
+.node .ini{font:700 13px system-ui;fill:#0b0d14;stroke:none}
+.node .nm{fill:var(--text);font-size:12px}
+.legend{position:absolute;left:16px;top:12px;display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--muted);pointer-events:none}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:10px;height:10px;border-radius:50%}
+/* quotes */
+#quotes{overflow:auto;padding:16px}
+.grid{columns:320px;column-gap:14px;max-width:1300px;margin:0 auto}
+.q{break-inside:avoid;margin:0 0 14px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--c);border-radius:10px;padding:16px}
+.q blockquote{margin:0 0 12px;font:17px/1.4 Georgia,serif}
+.q blockquote::before{content:"“";color:var(--c);font-size:28px;line-height:0;vertical-align:-10px;margin-right:2px}
+.q footer{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.q footer button{display:inline-flex;align-items:center;gap:6px;color:var(--text);font-weight:600}
+/* panel */
+#panel{position:absolute;top:0;right:0;bottom:0;width:min(400px,100%);background:color-mix(in srgb,var(--panel) 96%,transparent);border-left:1px solid var(--line);overflow:auto;padding:18px;box-shadow:-20px 0 40px #0008;backdrop-filter:blur(6px)}
+#panel .close{position:sticky;top:0;float:right;font-size:22px;color:var(--muted);line-height:1}
+#panel h2{font:600 22px/1.2 Georgia,serif;margin:2px 0 6px}
+#panel h3{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:20px 0 8px}
+#panel ul{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+#panel li button{display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:6px 8px;border-radius:8px}
+#panel li button:hover{background:#1a1f2f}
+#panel li small{color:var(--muted);margin-left:auto;text-align:right}
+.ph{display:flex;gap:14px;align-items:center}
+.av{flex:none;border-radius:50%;display:inline-grid;place-items:center;font-weight:700;color:#0b0d14;background:var(--c);overflow:hidden}
+.av img{width:100%;height:100%;object-fit:cover}
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--c);color:var(--c);margin:2px 4px 2px 0}
+.nfbadge{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;background:var(--nf);color:#fff;letter-spacing:.05em}
+.nfbox{display:flex;gap:12px;align-items:center;margin-top:14px;padding:10px;border:1px solid #4a1418;background:#1a0a0d;border-radius:10px}
+.nfbox img{width:56px;height:56px;border-radius:8px;object-fit:cover}
+.nfbox p{margin:4px 0 0;font-size:13px;color:#d9b9bc}
+.muted{color:var(--muted)}
+.when{font-weight:600;font-size:12px;letter-spacing:.05em;text-transform:uppercase}
+.navbtns{display:flex;justify-content:space-between;margin-top:20px}
+.navbtns button{padding:6px 12px;border:1px solid var(--line);border-radius:8px}
+.navbtns button:disabled{opacity:.3;cursor:default}
+#tip{position:fixed;pointer-events:none;background:#000c;border:1px solid var(--line);padding:4px 8px;border-radius:6px;font-size:12px;max-width:260px}
+
+/* article tabs */
+body[data-view=cosmic] #filters,body[data-view=trisolaris] #filters,body[data-view=tales] #filters{visibility:hidden}
+.article{overflow:auto;padding:28px 16px 90px}
+.wrap{max-width:1040px;margin:0 auto}
+.kicker{color:var(--muted);text-transform:uppercase;letter-spacing:.14em;font-size:12px;margin:0}
+.title{font:600 40px/1.1 Georgia,serif;margin:6px 0 10px}
+.lead{font-size:18px;color:#c3c8da;max-width:760px;margin:0 0 10px}
+.sec{display:flex;align-items:center;gap:12px;font:600 24px Georgia,serif;margin:56px 0 12px}
+.sec span{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:50%;background:#1d2335;font:700 14px system-ui;color:#c7cbe0}
+.article p{max-width:780px}
+.article q{font-style:italic}
+.fig{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin:16px 0}
+.two{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;align-items:start}
+@media (max-width:820px){.two{grid-template-columns:1fr}}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin:16px 0}
+.card{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--c,#39405a);border-radius:12px;padding:14px}
+.card h4{margin:0 0 6px;font-size:15px}
+.card p{margin:0;color:#b9bfd3;font-size:13.5px}
+.card .meta{display:block;margin-top:8px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.card.star{--c:#e5484d;background:linear-gradient(160deg,#2a0f14,var(--panel) 60%)}
+.big{font:600 15px Georgia,serif;color:var(--text)}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px;font-size:13px}
+.btn{padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:#151a28}
+.btn:hover{border-color:#4a5275}
+.btn.on{background:#26304a;border-color:#6b77a8}
+input[type=range]{accent-color:#8fa8ff}
+canvas{display:block;width:100%;border-radius:10px;background:#03040a}
+.readout{font:600 14px system-ui;color:#c7cbe0}
+.drake label{display:grid;grid-template-columns:1fr 70px;gap:2px 8px;font-size:12.5px;color:#b9bfd3;margin-bottom:6px}
+.drake label input{grid-column:1/3;width:100%}
+.drake label b{text-align:right;color:var(--text)}
+.drakeN{font:600 30px Georgia,serif;margin:6px 0 2px}
+table.matrix{border-collapse:separate;border-spacing:6px;width:100%;max-width:780px;font-size:13.5px}
+.matrix th{color:var(--muted);font-weight:600;text-align:left;padding:4px 8px}
+.matrix td{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;vertical-align:top}
+.matrix td.good{border-color:#2f6f55;background:#0e1f19}
+.matrix td.bad{border-color:#7a2a2f;background:#22100f}
+.matrix td.meh{border-color:#6d5a26;background:#1f1a0d}
+.chainlist{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:4px;font-size:14px}
+.chainlist li{color:var(--muted)} .chainlist li:last-child{color:var(--text);font-weight:600}
+.climate{height:10px;border-radius:5px;background:linear-gradient(90deg,#4aa3ff,#5fd38d 45%,#5fd38d 55%,#ff5a3c);position:relative;margin:6px 0 2px;max-width:420px}
+.climate i{position:absolute;top:-4px;width:4px;height:18px;background:#fff;border-radius:2px;transform:translateX(-2px)}
+.techgroup{margin-top:26px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.q details{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
+.q summary{cursor:pointer;font-size:12px;font-weight:600;color:#8fa8ff;letter-spacing:.04em;list-style:none}
+.q summary::before{content:"▸ "} .q details[open] summary::before{content:"▾ "}
+.q details p{margin:6px 0 0;font-size:13.5px;color:#c3c8da;line-height:1.5}
+.qbar{display:flex;justify-content:space-between;align-items:center;gap:10px;max-width:1300px;margin:0 auto;flex-wrap:wrap}
+/* fairy tales */
+.tale p{font:16.5px/1.7 Georgia,serif;color:#dfe2ee;margin:0 0 12px}
+.tale-title{font:600 22px Georgia,serif;margin:4px 0 12px}
+.sym{transition:background .2s}
+.decode .sym{background:color-mix(in srgb,var(--c) 22%,transparent);border-bottom:2px solid var(--c);cursor:pointer;border-radius:3px;padding:0 2px}
+.decode .sym:hover{background:color-mix(in srgb,var(--c) 45%,transparent)}
+#decoder{position:fixed;right:16px;bottom:16px;width:min(380px,calc(100% - 32px));max-height:70vh;overflow:auto;background:var(--panel);border:1px solid #39405a;border-radius:14px;padding:16px;box-shadow:0 20px 50px #000a;z-index:5}
+#decoder h4{font:600 19px Georgia,serif;margin:4px 0 8px}
+#decoder p{font-size:13.5px;color:#c3c8da;margin:0 0 10px}
+#decoder .close{float:right;font-size:20px;color:var(--muted)}
+.mapnode text{paint-order:stroke;stroke:var(--panel);stroke-width:4px}
+.qbook{font:600 20px Georgia,serif;margin:22px auto 12px;max-width:1300px}
+@media (max-width:700px){#filters{margin-left:0}#search{width:110px}h1 small{display:none}}
+#disclaimer{padding:5px 16px;border-top:1px solid var(--line);color:var(--muted);font-size:11px;text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <h1>Remembrance of Earth's Past<small>Characters · Events · Quotes · Netflix</small></h1>
+  <nav id="tabs">
+    <button data-view="timeline" class="on">Timeline</button>
+    <button data-view="network">Characters</button>
+    <button data-view="quotes">Quotes</button>
+    <button data-view="cosmic">Dark Forest</button>
+    <button data-view="trisolaris">Trisolarans</button>
+    <button data-view="tales">Fairy Tales</button>
+  </nav>
+  <div id="filters"></div>
+</header>
+<main>
+  <section id="timeline" class="view">
+    <svg></svg>
+    <div class="hint">Scroll / pinch to zoom · drag to pan · click an era to zoom in · ← → step through events</div>
+    <div class="zoomctl"><button data-z="2" title="Zoom in">+</button><button data-z="0.5" title="Zoom out">−</button><button data-z="0" title="Reset">⟲</button></div>
+  </section>
+  <section id="network" class="view" hidden>
+    <svg></svg>
+    <div class="legend"></div>
+    <div class="hint">Hover to see relationships · click for details · drag nodes · scroll to zoom</div>
+  </section>
+  <section id="quotes" class="view" hidden><div class="qwrap"></div></section>
+  <!-- ═════════ DARK FOREST ═════════ -->
+  <section id="cosmic" class="view article" hidden><div class="wrap">
+    <p class="kicker">Fermi paradox · cosmic sociology</p>
+    <h2 class="title">The Dark Forest</h2>
+    <p class="lead">Liu Cixin's answer to one of science's great open questions: if the universe is so big and so old, why is it so quiet?</p>
+
+    <h3 class="sec"><span>1</span>The Fermi Paradox</h3>
+    <p>In 1950, physicist Enrico Fermi asked over lunch: <q>But where is everybody?</q> Our galaxy has 100–400 billion stars and is over 13 billion years old. Most stars have planets. Life on Earth appeared almost as soon as it could. Even a slow civilization could cross the galaxy in a few million years. Yet we see no ships, hear no signals. <b>The Great Silence.</b></p>
+    <p class="muted">Play with the Drake equation, a rough way to estimate how many civilizations should be out there. Every number is a guess; scientists disagree by many orders of magnitude.</p>
+    <div class="fig two">
+      <div><canvas id="galaxy" style="aspect-ratio:1.25"></canvas>
+        <p class="muted" style="font-size:12px;margin:8px 0 0">Bright dots: civilizations broadcasting. Faint dots: civilizations that exist but stay silent.</p></div>
+      <div class="drake" id="drake"></div>
+    </div>
+    <p>Possible answers to the paradox:</p>
+    <div class="cards">
+      <div class="card"><h4>Rare Earth</h4><p>Complex life needs so many lucky accidents that we might be nearly alone.</p></div>
+      <div class="card"><h4>The Great Filter</h4><p>Some step (life, intelligence, or surviving one's own technology) is almost impossible. It may still be ahead of us.</p></div>
+      <div class="card"><h4>Too far, too brief</h4><p>Civilizations are separated by vast distances and times, and their signals fade before anyone hears them.</p></div>
+      <div class="card"><h4>The Zoo</h4><p>They know we're here and are deliberately leaving us alone.</p></div>
+      <div class="card star"><h4>★ The Dark Forest</h4><p>The universe is full of life, and all of it is hiding. Any civilization that reveals itself gets destroyed. Silence is how you survive.</p><span class="meta">Liu Cixin · The Dark Forest</span></div>
+    </div>
+
+    <h3 class="sec"><span>2</span>Cosmic sociology: two axioms</h3>
+    <p>At Yang Dong's grave, Ye Wenjie gives Luo Ji the seed of a new science, a sociology of civilizations:</p>
+    <div class="cards">
+      <div class="card" style="--c:#f2c14e"><h4>Axiom 1</h4><p class="big">Survival is the primary need of civilization.</p></div>
+      <div class="card" style="--c:#f2c14e"><h4>Axiom 2</h4><p class="big">Civilization continuously grows and expands, but the total matter in the universe remains constant.</p><p style="margin-top:8px">In other words, <b>resources are limited</b>. Every civilization wants to keep growing, but the universe isn't getting any bigger. Sooner or later, growth means taking space, energy and matter that someone else also needs. Civilizations are natural competitors, even if none of them is evil.</p></div>
+      <div class="card" style="--c:#8fa8ff"><h4>Concept: Chains of suspicion</h4><p>You can never know whether another civilization is benevolent, or whether it believes <i>you</i> are.</p></div>
+      <div class="card" style="--c:#8fa8ff"><h4>Concept: Technological explosion</h4><p>Technology can leap forward suddenly. A primitive civilization today can be a threat tomorrow.</p></div>
+    </div>
+    <p>Add one fact, that space is enormous and messages take years to cross it, and Luo Ji derives everything else.</p>
+
+    <h3 class="sec"><span>3</span>Chains of suspicion</h3>
+    <p>Between people, suspicion can be broken by talking, sharing culture, and reading faces. Between two civilizations light-years apart, with completely alien minds, it can't. Each extra layer of “but what do they think I think?” costs another round trip at light speed.</p>
+    <div class="fig" id="chain"></div>
+
+    <h3 class="sec"><span>4</span>Technological explosion</h3>
+    <p>When Trisolaris heard from Earth in 1979, humans were far behind. But the fleet needs about 450 years to arrive. In just the last few centuries, human technology went from muskets to spaceflight. By arrival, who would be stronger? This is exactly why the Trisolarans sent sophons ahead to <b>freeze Earth's basic science</b>.</p>
+    <div class="fig" id="techx"></div>
+
+    <h3 class="sec"><span>5</span>The logic: strike first</h3>
+    <p>You have just discovered another civilization. You can't know whether they're benevolent (chains of suspicion), and even if they're weak now, they may not stay weak (technological explosion).</p>
+    <div style="overflow-x:auto"><table class="matrix">
+      <tr><th></th><th>They're benevolent</th><th>They're hostile</th></tr>
+      <tr><th>You stay hidden</th><td class="meh"><b>Safe for now.</b> But they may turn hostile, or explode technologically, or decide <i>you</i> are hostile.</td><td class="bad"><b>You die</b> the moment they find you.</td></tr>
+      <tr><th>You reveal yourself</th><td class="meh"><b>Gamble.</b> Even friendly hunters can't be sure you are friendly.</td><td class="bad"><b>You die.</b></td></tr>
+      <tr><th>You strike first</th><td class="good"><b>You survive.</b> The cost is tiny: a photoid is just a pebble thrown fast.</td><td class="good"><b>You survive.</b></td></tr>
+    </table></div>
+    <p>Only striking first guarantees survival (Axiom 1). Everyone can reason this out, so everyone hides, and everyone shoots at whatever shows itself. That is the dark forest:</p>
+    <blockquote class="fig" style="font:18px/1.5 Georgia,serif;border-left:3px solid #4fc08d">“The universe is a dark forest. Every civilization is an armed hunter stalking through the trees like a ghost… If he finds other life, there's only one thing he can do: open fire and eliminate them.”<br><span class="muted" style="font:13px system-ui">Luo Ji, The Dark Forest</span></blockquote>
+
+    <h3 class="sec"><span>6</span>Try it: the forest</h3>
+    <p>Every dot is a hidden civilization. A few are hunters, and you can't see which. <b>Click any star</b> to make it reveal itself, or use the buttons. Its message spreads at light speed, and any hunter it reaches may fire.</p>
+    <div class="fig">
+      <canvas id="forest" style="aspect-ratio:2.1"></canvas>
+      <div class="controls">
+        <button class="btn" id="fBroadcast">📡 Earth says “Hello!”</button>
+        <button class="btn" id="fSpell">✨ Luo Ji's spell: broadcast another star's location</button>
+        <label class="btn"><input type="checkbox" id="fHunters"> Show hunters</label>
+        <button class="btn" id="fReset">↺ Reset</button>
+        <span class="readout" id="fStats" style="margin-left:auto"></span>
+      </div>
+    </div>
+
+    <h3 class="sec"><span>7</span>How it plays out in the books</h3>
+    <div class="cards">
+      <div class="card" style="--c:#4fc08d"><h4>The spell on 187J3X1</h4><p>Luo Ji uses the Sun to broadcast the location of a star about 50 light-years away. Long after, it is found destroyed. The theory is proven.</p><span class="meta">The Dark Forest</span></div>
+      <div class="card" style="--c:#4fc08d"><h4>Deterrence</h4><p>Luo Ji rigs nuclear bombs around the Sun to broadcast Trisolaris' location if Trisolaris attacks: mutually assured destruction. It only works while the Swordholder is believed to be willing to press the button.</p><span class="meta">The Dark Forest → Death's End</span></div>
+      <div class="card" style="--c:#8fa8ff"><h4>The broadcast</h4><p>Gravity and Blue Space reveal Trisolaris' coordinates. About three years later a photoid destroys its star. Earth is now exposed too, because the two worlds had been talking.</p><span class="meta">Death's End</span></div>
+      <div class="card" style="--c:#8fa8ff"><h4>Cleaning</h4><p>To the Singer's civilization, wiping out a star system is routine housekeeping. The Singer flicks a dual-vector foil and the Solar System collapses into two dimensions. <i>“Hide well, cleanse well.”</i></p><span class="meta">Death's End</span></div>
+      <div class="card" style="--c:#8fa8ff"><h4>Ways to survive</h4><p><b>Bunker Project:</b> hide behind the gas giants (fails against a 2D attack). <b>Black domain:</b> slow light around your star so nothing can escape, a public “safety notice” that you're harmless. <b>Flight:</b> lightspeed ships.</p><span class="meta">Death's End</span></div>
+      <div class="card star"><h4>A scarred universe</h4><p>The deepest twist: the universe was once 10-dimensional, with a much faster speed of light. Endless dark-forest warfare used dimensions and light speed as weapons. The physics we know are the ruins of that war.</p><span class="meta">Death's End</span></div>
+    </div>
+  </div></section>
+
+  <!-- ═════════ TRISOLARANS ═════════ -->
+  <section id="trisolaris" class="view article" hidden><div class="wrap">
+    <p class="kicker">The invaders</p>
+    <h2 class="title">Trisolaris</h2>
+    <p class="lead">A world with three suns, the real mathematics behind it, and the civilization and technology that came out of it.</p>
+
+    <h3 class="sec"><span>1</span>The three-body problem</h3>
+    <p>Two bodies (a sun and a planet) are perfectly predictable: Newton solved it in 1687, and orbits are clean ellipses forever. Add a <b>third</b> body and there is no general formula. Tiny differences grow exponentially, so the system is <b>chaotic</b>. That is the Trisolarans' nightmare: their planet orbits three suns, so they can never predict tomorrow's sky.</p>
+    <div class="fig">
+      <canvas id="threebody" style="aspect-ratio:1.9"></canvas>
+      <div class="controls">
+        <button class="btn on" data-preset="chaos">☀☀☀ Trisolaris (random)</button>
+        <button class="btn" data-preset="eight">∞ Figure-8 (rare stable solution)</button>
+        <button class="btn" data-preset="sun">☀ Our Sun (two bodies)</button>
+        <button class="btn" id="tbPause">⏸ Pause</button>
+        <button class="btn" id="tbNew">↻ New system</button>
+        <label class="btn"><input type="checkbox" id="tbTwin"> Butterfly effect: add a twin system offset by 0.000001</label>
+        <label>Speed <input type="range" id="tbSpeed" min="1" max="10" value="3"></label>
+      </div>
+      <div class="two" style="margin-top:12px">
+        <div><div class="readout" id="tbStatus"></div><div class="climate"><i id="tbClimate"></i></div>
+          <div class="muted" style="font-size:12px;display:flex;justify-content:space-between;max-width:420px"><span>❄ frozen</span><span>habitable</span><span>burning 🔥</span></div></div>
+        <div class="muted" id="tbInfo" style="font-size:13px"></div>
+      </div>
+    </div>
+    <div class="cards">
+      <div class="card"><h4>1687 · Newton</h4><p>Solves two bodies exactly. The Sun–Earth–Moon problem reportedly “made his head ache”.</p></div>
+      <div class="card"><h4>1767–1772 · Euler &amp; Lagrange</h4><p>Find special exact solutions: three bodies in a line, or at the corners of a rotating triangle.</p></div>
+      <div class="card"><h4>1890 · Poincaré</h4><p>Proves there is no general closed-form solution and, in doing so, discovers chaos.</p></div>
+      <div class="card"><h4>1912 · Sundman</h4><p>Finds an infinite series that technically solves it, but it would need around 10<sup>8,000,000</sup> terms to be useful.</p></div>
+      <div class="card"><h4>1993–2000 · The figure-8</h4><p>Moore discovers, and Chenciner &amp; Montgomery prove, a beautiful stable dance of three equal masses. Computers have since found thousands more periodic orbits.</p></div>
+      <div class="card" style="--c:#ff8a3d"><h4>Real Alpha Centauri</h4><p>4.2–4.4 light-years away. Stars A and B orbit each other every ~80 years. Proxima is far out, on an orbit of ~550,000 years. In reality it is fairly stable; the novel exaggerates. Proxima b, a real planet, was found in 2016.</p></div>
+    </div>
+
+    <h3 class="sec"><span>2</span>Life under three suns</h3>
+    <div class="cards">
+      <div class="card" style="--c:#5fd38d"><h4>Stable Eras</h4><p>The planet orbits one sun steadily for years or centuries. Civilization blooms.</p></div>
+      <div class="card" style="--c:#ff5a3c"><h4>Chaotic Eras</h4><p>Suns rise at random. Long freezing nights, or days that burn. When three suns rise together, a “tri-solar day”, the planet is scorched.</p></div>
+      <div class="card" style="--c:#4aa3ff"><h4>Flying stars</h4><p>When the suns are far away they look like small stars, a warning of deep cold.</p></div>
+      <div class="card" style="--c:#c084fc"><h4>Dehydration</h4><p>Trisolarans can dry out into lifeless fibrous rolls, be stored through a Chaotic Era, and be rehydrated when a Stable Era returns. <i>“Dehydrate!”</i></p></div>
+      <div class="card" style="--c:#c084fc"><h4>Hundreds of restarts</h4><p>The Three Body game numbers its civilizations past 200. Each one is destroyed by the suns and rebuilds from scratch.</p></div>
+      <div class="card" style="--c:#c084fc"><h4>Transparent minds</h4><p>Trisolarans communicate by displaying their thoughts, so they cannot lie. Deception is alien and terrifying to them, which is why the Wallfacers' hidden plans are humanity's weapon.</p></div>
+      <div class="card" style="--c:#c084fc"><h4>A totalitarian society</h4><p>Survival above all. The individual is worthless and emotion is a weakness. Listener 1379's pity is a crime.</p></div>
+    </div>
+    <p>That is the Trisolarans' motive: their world is a death trap, and Ye Wenjie handed them the address of a planet with one calm sun.</p>
+
+    <h3 class="sec"><span>3</span>Contact and invasion: the 4.2-light-year gap</h3>
+    <p>Everything moves at or below light speed. Drag the slider or press play. <span class="muted">(Dates approximate.)</span></p>
+    <div class="fig">
+      <svg id="gap" viewBox="0 0 900 210" style="width:100%;height:auto;display:block"></svg>
+      <div class="controls">
+        <button class="btn" id="gapPlay">▶ Play</button>
+        <input type="range" id="gapYear" min="1969" max="2280" step="0.1" value="1969" style="flex:1;min-width:200px">
+        <span class="readout" id="gapLabel" style="min-width:60px"></span>
+      </div>
+      <p class="big" id="gapCaption" style="margin:10px 0 0;min-height:1.5em"></p>
+    </div>
+
+    <h3 class="sec"><span>4</span>Sophons: unfolding a proton</h3>
+    <p>To freeze Earth's science, Trisolaris turns a single proton into a supercomputer. A proton has 11 dimensions, most curled up tiny. Unfold some and it becomes enormous.</p>
+    <div class="fig two">
+      <svg id="sophonSvg" viewBox="0 0 400 230" style="width:100%;height:auto;background:#03040a;border-radius:10px"></svg>
+      <div>
+        <div class="readout" id="sophonStep"></div>
+        <p id="sophonText" style="min-height:5.5em"></p>
+        <div class="controls"><button class="btn" id="sophonPrev">← Back</button><button class="btn" id="sophonNext">Next →</button></div>
+        <p class="muted" style="font-size:13px">On Earth, sophons <b>spy</b> on everything, <b>sabotage particle accelerators</b> so physics experiments return nonsense, <b>project images</b> onto retinas (Wang Miao's countdown), and talk to Trisolaris <b>instantly</b> through quantum entanglement.</p>
+      </div>
+    </div>
+
+    <h3 class="sec"><span>5</span>Technology in the trilogy</h3>
+    <div id="techCards"></div>
+  </div></section>
+
+  <section id="tales" class="view article" hidden><div class="wrap" id="talesWrap"></div></section>
+
+  <aside id="panel" hidden><button class="close" title="Close (Esc)">×</button><div class="body"></div></aside>
+</main>
+<footer id="disclaimer">Unofficial, non-commercial fan project made for personal study. It is intended as a transformative work: original summaries, commentary, analysis and interactive visualizations. <i>Remembrance of Earth's Past</i> belongs to Liu Cixin (translated by Ken Liu and Joel Martinsen; published by Tor Books). <i>3 Body Problem</i>, its character images and related material belong to Netflix and their respective owners. Short quotes are used for commentary only. Not affiliated with or endorsed by any rights holder.</footer>
+<div id="tip" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="data.js"></script>
+<script>
+// size a canvas to its CSS box (HiDPI aware); returns null while hidden
+function fitCanvas(cv) {
+  const r = cv.getBoundingClientRect(), d = devicePixelRatio || 1;
+  if (!r.width) return null;
+  const W = Math.round(r.width * d), H = Math.round(r.height * d);
+  if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+  const ctx = cv.getContext("2d"); ctx.setTransform(d, 0, 0, d, 0, 0);
+  return { ctx, w: r.width, h: r.height };
+}
+const S = { books: new Set([1, 2, 3]), nf: false, q: "", view: "timeline", focus: null };
+const $ = s => document.querySelector(s);
+const { books: BOOK, factions: FAC } = DATA;
+const CH = new Map(DATA.characters.map(c => [c.id, c]));
+const EV = DATA.events.slice().sort((a, b) => a.t - b.t);
+
+const nm = c => (S.nf && c.nf) ? c.nf.name : c.name;
+const charOn = c => c.nfOnly ? S.nf : c.books.some(b => S.books.has(b));
+const evOn = e => S.books.has(e.book);
+const color = c => FAC[c.f].color;
+const initials = s => { const w = s.replace(/[“(].*?[”)]/g, "").split(/\s+/).filter(Boolean); return w.length > 1 ? w.map(x => x[0]).join("").slice(0, 2) : w[0].slice(0, 2); };
+const photo = c => S.nf && c.nf && c.nf.img ? "img/" + c.nf.img : null;
+const eraOf = t => DATA.eras.find(e => t >= e.from && t < e.to) || DATA.eras.at(-1);
+const hayChar = c => [c.name, c.bio, c.nf?.name, c.nf?.actor].join(" ").toLowerCase();
+const hayEv = e => [e.title, e.desc, e.when, ...e.chars.map(id => CH.get(id).name + " " + (CH.get(id).nf?.name || ""))].join(" ").toLowerCase();
+const hit = h => !S.q || h.includes(S.q);
+const avatar = (c, px) => `<span class="av" style="--c:${color(c)};width:${px}px;height:${px}px;font-size:${px * .38}px">${photo(c) ? `<img src="${photo(c)}" alt="">` : initials(nm(c))}</span>`;
+const bookTag = b => `<span class="tag" style="--c:${BOOK[b].color}">${BOOK[b].short} · ${BOOK[b].title}</span>`;
+const nfBadge = `<span class="nfbadge">N S1</span>`;
+// focus → set of related ids, used for dimming everywhere
+function focusSet() {
+  const f = S.focus; if (!f) return null;
+  if (f.type === "c") return new Set([f.id, ...DATA.links.flatMap(l => l.s === f.id ? [l.t] : l.t === f.id ? [l.s] : [])]);
+  return new Set(EV.find(e => e.id === f.id).chars);
+}
+
+/* ───────── filters ───────── */
+$("#filters").innerHTML =
+  Object.entries(BOOK).map(([k, b]) => `<label class="chip" style="--c:${b.color}" title="${b.title}"><input type="checkbox" data-book="${k}" checked><i></i>${b.short} · ${b.title}</label>`).join("") +
+  `<label class="chip" style="--c:var(--nf)" title="Show Netflix names, cast photos and Netflix-only characters"><input type="checkbox" id="nfx"><span class="nfbadge">N</span>Netflix names</label>` +
+  `<input id="search" type="search" placeholder="Search…">`;
+$("#filters").addEventListener("change", e => {
+  const b = e.target.dataset.book;
+  if (b) e.target.checked ? S.books.add(+b) : S.books.delete(+b);
+  if (e.target.id === "nfx") S.nf = e.target.checked;
+  refresh(true);
+});
+$("#search").addEventListener("input", e => { S.q = e.target.value.trim().toLowerCase(); refresh(); });
+
+/* ───────── tabs ───────── */
+$("#tabs").addEventListener("click", e => { const v = e.target.dataset.view; if (v) show(v); });
+function show(v) {
+  S.view = v; document.body.dataset.view = v;
+  document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.view === v));
+  document.querySelectorAll(".view").forEach(s => s.hidden = s.id !== v);
+  refresh(true);
+}
+
+/* ───────── tooltip ───────── */
+const tip = $("#tip");
+const tipShow = (ev, html) => { tip.innerHTML = html; tip.hidden = false; tip.style.left = ev.clientX + 14 + "px"; tip.style.top = ev.clientY + 14 + "px"; };
+const tipHide = () => tip.hidden = true;
+
+/* ───────── timeline ───────── */
+const TL = (() => {
+  const svg = d3.select("#timeline svg");
+  const gBand = svg.append("g"), gTick = svg.append("g"), gLane = svg.append("g"), gEv = svg.append("g");
+  let W = 0, H = 0, base, zt = d3.zoomIdentity;
+  const PAD = 24, TOP = 56, BOT = 52;
+  const zoom = d3.zoom().scaleExtent([1, 20000]).on("zoom", e => { zt = e.transform; draw(); });
+  svg.call(zoom).on("dblclick.zoom", null);
+  const X = t => zt.applyX(base(t));
+  const laneY = b => TOP + 20 + (b - .5) * (H - TOP - BOT - 40) / 3;
+
+  function size() {
+    const r = svg.node().getBoundingClientRect();
+    if (!r.width) return false;
+    if (r.width !== W || r.height !== H) {
+      W = r.width; H = r.height;
+      base = d3.scaleLinear().domain(DATA.knots.map(k => k[0])).range(DATA.knots.map(k => PAD + k[1] * (W - 2 * PAD)));
+      zoom.extent([[0, 0], [W, H]]).translateExtent([[0, 0], [W, H]]);
+    }
+    return true;
+  }
+  const go = tr => svg.transition().duration(650).call(zoom.transform, zoom.constrain()(tr, [[0, 0], [W, H]], [[0, 0], [W, H]]));
+  // fit a base-pixel range [b0,b1] into the view
+  const fit = (b0, b1) => { const k = Math.min(20000, (W - 2 * PAD) / Math.max(b1 - b0, 1e-9)); go(d3.zoomIdentity.translate(PAD - b0 * k, 0).scale(k)); };
+
+  function focusEvent(e) {
+    if (!size()) return;
+    // zoom until the event's nearest neighbour in its lane is ~140px away
+    const lane = EV.filter(x => x.book === e.book && evOn(x)), i = lane.indexOf(e), bx = base(e.t);
+    const gaps = [lane[i - 1], lane[i + 1]].filter(Boolean).map(n => Math.abs(base(n.t) - bx)).filter(g => g > 0);
+    const k = Math.max(zt.k, Math.min(20000, gaps.length ? 140 / Math.min(...gaps) : 1));
+    go(d3.zoomIdentity.translate(W / 2 - bx * k, 0).scale(k));
+  }
+
+  function draw() {
+    if (!size()) return;
+    // era bands
+    gBand.selectAll("g.era").data(DATA.eras).join(en => {
+      const g = en.append("g").attr("class", "era");
+      g.append("rect"); g.append("text").attr("class", "t"); g.append("text").attr("class", "sub");
+      g.on("click", (ev, d) => fit(base(d.from), base(d.to)))
+       .on("mousemove", (ev, d) => tipShow(ev, `<b>${d.name}</b> <span class="muted">${d.range}</span><br>${d.note}`)).on("mouseleave", tipHide);
+      return g;
+    }).each(function (d, i) {
+      const x0 = X(d.from), x1 = X(d.to), g = d3.select(this);
+      const v0 = Math.max(x0, 0), v1 = Math.min(x1, W), cx = (v0 + v1) / 2, room = v1 - v0;
+      g.select("rect").attr("x", x0).attr("width", Math.max(0, x1 - x0)).attr("y", 0).attr("height", H).attr("fill", i % 2 ? "var(--band2)" : "var(--band1)");
+      g.select(".t").attr("x", cx).attr("y", 22).attr("text-anchor", "middle").text(room > d.name.length * 8 ? d.name : room > 24 ? "·" : "");
+      g.select(".sub").attr("x", cx).attr("y", 38).attr("text-anchor", "middle").text(room > d.range.length * 6.5 ? d.range : "");
+    });
+
+    // ticks: era boundaries + nice ticks inside each visible segment
+    const K = DATA.knots, ticks = [];
+    for (let i = 0; i < K.length - 1; i++) {
+      const d0 = K[i][0], d1 = K[i + 1][0], x0 = X(d0), x1 = X(d1);
+      if (x1 < 0 || x0 > W) continue;
+      const v0 = Math.max(x0, 0), v1 = Math.min(x1, W), inv = x => d0 + (d1 - d0) * (x - x0) / (x1 - x0);
+      d3.ticks(inv(v0), inv(v1), Math.floor((v1 - v0) / 90)).filter(Number.isInteger).forEach(t => ticks.push(t));
+    }
+    K.forEach(k => ticks.push(k[0]));
+    let last = -1e9;
+    const shown = [...new Set(ticks)].sort((a, b) => a - b).filter(t => { const x = X(t); if (x < 0 || x > W || x - last < 56) return false; last = x; return true; });
+    gTick.selectAll("g.tick").data(shown, d => d).join(en => {
+      const g = en.append("g").attr("class", "tick"); g.append("line"); g.append("text").attr("text-anchor", "middle"); return g;
+    }).attr("transform", d => `translate(${X(d)},0)`)
+      .call(g => g.select("line").attr("y1", TOP).attr("y2", H - BOT + 4))
+      .call(g => g.select("text").attr("y", H - BOT + 18).text(d => d === 1440 ? "" : d >= 1e5 ? d3.format(",")(d) : d));
+
+    // lanes
+    gLane.selectAll("g.lane").data([1, 2, 3]).join(en => {
+      const g = en.append("g").attr("class", "lane"); g.append("line"); g.append("text"); return g;
+    }).attr("opacity", b => S.books.has(b) ? 1 : .25)
+      .call(g => g.select("line").attr("x1", 0).attr("x2", W).attr("y1", laneY).attr("y2", laneY).attr("stroke", b => BOOK[b].color))
+      .call(g => g.select("text").attr("x", 10).attr("y", b => laneY(b) - 62).attr("fill", b => BOOK[b].color).text(b => `${BOOK[b].short} · ${BOOK[b].title}`));
+
+    // events with label decluttering: 4 label rows per lane, first free row wins
+    const rows = { 1: [], 2: [], 3: [] }, OFF = [-14, 26, -32, 44];
+    gEv.selectAll("g.ev").data(EV.filter(evOn), d => d.id).join(en => {
+      const g = en.append("g").attr("class", "ev");
+      g.append("line"); g.append("circle").attr("class", "nfring").attr("r", 11); g.append("circle").attr("class", "dot").attr("r", 7); g.append("text").attr("text-anchor", "middle");
+      g.on("click", (ev, d) => openEvent(d.id, false))
+       .on("mousemove", (ev, d) => tipShow(ev, `<b>${d.title}</b><br><span class="muted">${d.when}</span>`)).on("mouseleave", tipHide);
+      return g;
+    }).each(function (d) {
+      const g = d3.select(this), x = X(d.t), y = laneY(d.book), r = rows[d.book];
+      g.attr("transform", `translate(${x},${y})`).attr("display", x < -80 || x > W + 80 ? "none" : null)
+       .classed("dim", (S.focus?.type === "c" && !d.chars.includes(S.focus.id)) || !hit(hayEv(d)))
+       .classed("sel", S.focus?.type === "e" && S.focus.id === d.id);
+      g.select(".dot").attr("fill", BOOK[d.book].color);
+      g.select(".nfring").attr("display", d.nf && S.nf ? null : "none");
+      const w = d.title.length * 6.6 + 12;
+      const row = OFF.findIndex((o, i) => (r[i] ?? -1e9) < x - w / 2);
+      if (row < 0) { g.select("text").text(""); g.select("line").attr("y2", 0); return; }
+      r[row] = x + w / 2;
+      g.select("text").attr("y", OFF[row]).attr("x", Math.min(Math.max(x, w / 2), W - w / 2) - x).text(d.title); // keep edge labels on screen
+      g.select("line").attr("y1", 0).attr("y2", Math.abs(OFF[row]) > 20 ? OFF[row] + (OFF[row] > 0 ? -12 : 4) : 0);
+    });
+  }
+
+  document.querySelector("#timeline .zoomctl").addEventListener("click", e => {
+    const z = +e.target.dataset.z; if (isNaN(z)) return;
+    z ? svg.transition().duration(350).call(zoom.scaleBy, z) : go(d3.zoomIdentity);
+  });
+  return { draw, focusEvent };
+})();
+
+/* ───────── character network ───────── */
+const NET = (() => {
+  const svg = d3.select("#network svg");
+  svg.append("defs").html(`<clipPath id="clipc" clipPathUnits="objectBoundingBox"><circle cx=".5" cy=".5" r=".5"/></clipPath>`);
+  const root = svg.append("g"), gL = root.append("g"), gLL = root.append("g"), gN = root.append("g");
+  const zoom = d3.zoom().scaleExtent([.25, 4]).on("zoom", e => root.attr("transform", e.transform));
+  svg.call(zoom).on("dblclick.zoom", null);
+  const nodes = new Map();
+  let links = [], hover = null, started = false;
+  const sim = d3.forceSimulation()
+    .force("link", d3.forceLink().id(d => d.id).distance(130).strength(.4))
+    .force("charge", d3.forceManyBody().strength(-800))
+    .force("collide", d3.forceCollide(52))
+    .force("x", d3.forceX().strength(.04)).force("y", d3.forceY().strength(.1))
+    .on("tick", tick);
+  $("#network .legend").innerHTML = Object.values(FAC).map(f => `<span><i style="background:${f.color}"></i>${f.label}</span>`).join("");
+
+  function update() {
+    const r = svg.node().getBoundingClientRect();
+    if (!r.width) return;
+    if (!started) { started = true; svg.call(zoom.transform, d3.zoomIdentity.translate(r.width / 2, r.height / 2)); }
+    const ns = DATA.characters.filter(charOn).map(c => nodes.get(c.id) || nodes.set(c.id, { id: c.id, c }).get(c.id));
+    const ids = new Set(ns.map(n => n.id));
+    links = DATA.links.filter(l => ids.has(l.s) && ids.has(l.t)).map(l => ({ source: l.s, target: l.t, l }));
+    sim.nodes(ns); sim.force("link").links(links); sim.alpha(.6).restart();
+
+    gL.selectAll("line").data(links).join("line").attr("class", d => "link" + (CH.get(d.l.s).nfOnly ? " nfo" : ""));
+    gN.selectAll("g.node").data(ns, d => d.id).join(en => {
+      const g = en.append("g").attr("class", "node");
+      g.append("circle").attr("r", 22); g.append("text").attr("class", "ini").attr("dy", 4.5);
+      g.append("image").attr("x", -20).attr("y", -20).attr("width", 40).attr("height", 40).attr("clip-path", "url(#clipc)").attr("preserveAspectRatio", "xMidYMid slice");
+      g.append("text").attr("class", "nm").attr("dy", 38);
+      g.on("click", (ev, d) => openChar(d.id))
+       .on("mouseenter", (ev, d) => { hover = d.id; style(); }).on("mouseleave", () => { hover = null; style(); })
+       .call(d3.drag()
+         .on("start", (ev, d) => { if (!ev.active) sim.alphaTarget(.2).restart(); d.fx = d.x; d.fy = d.y; })
+         .on("drag", (ev, d) => { d.fx = ev.x; d.fy = ev.y; })
+         .on("end", (ev, d) => { if (!ev.active) sim.alphaTarget(0); d.fx = d.fy = null; }));
+      return g;
+    }).each(function (d) {
+      const g = d3.select(this), c = d.c, p = photo(c);
+      g.select("circle").attr("fill", color(c));
+      g.select(".ini").text(p ? "" : initials(nm(c)));
+      g.select("image").attr("href", p).attr("display", p ? null : "none");
+      g.select(".nm").text(nm(c));
+    });
+    style();
+  }
+
+  function style() {
+    const fs = hover ? new Set([hover, ...links.flatMap(l => l.source.id === hover ? [l.target.id] : l.target.id === hover ? [l.source.id] : [])]) : focusSet();
+    const center = hover || (S.focus?.type === "c" ? S.focus.id : null);
+    gN.selectAll("g.node").classed("dim", d => (fs && !fs.has(d.id)) || !hit(hayChar(d.c))).classed("sel", d => S.focus?.type === "c" && S.focus.id === d.id);
+    const on = l => center ? (l.source.id === center || l.target.id === center) : S.focus?.type === "e" && fs.has(l.source.id) && fs.has(l.target.id);
+    gL.selectAll("line").classed("hi", on).classed("dim", l => fs && !on(l));
+    gLL.selectAll("text").data(links.filter(on)).join("text").attr("class", "llabel").text(l => l.l.label);
+    tick();
+  }
+
+  function tick() {
+    gL.selectAll("line").attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+    gN.selectAll("g.node").attr("transform", d => `translate(${d.x},${d.y})`);
+    gLL.selectAll("text").attr("x", d => (d.source.x + d.target.x) / 2).attr("y", d => (d.source.y + d.target.y) / 2 - 4);
+  }
+  return { update, style };
+})();
+
+/* ───────── quotes ───────── */
+function drawQuotes() {
+  const card = q => {
+    const c = CH.get(q.who);
+    return `<figure class="q" style="--c:${BOOK[q.book].color}">
+      <blockquote>${q.text}</blockquote>
+      <footer>${c ? `<button data-c="${c.id}">${avatar(c, 24)}${q.by || nm(c)}</button>` : `<b style="color:var(--text)">${q.by}</b>`}
+        <span>${q.ctx}</span>
+        <span style="margin-left:auto">${q.approx ? "≈ paraphrase" : ""}</span>${q.nf ? nfBadge : ""}</footer>
+      <details ${S.qOpen ? "open" : ""}><summary>Explain</summary><p>${q.why}</p></details></figure>`;
+  };
+  // all quotes, grouped by book; only the search box filters them
+  const qs = DATA.quotes.filter(q => { const c = CH.get(q.who); return hit([q.text, q.ctx, q.by, q.why, c?.name, c?.nf?.name].join(" ").toLowerCase()); });
+  $("#quotes .qwrap").innerHTML = `<div class="qbar"><span class="muted">${qs.length} quotes · use the search box to filter</span>
+    <label class="chip" style="--c:#8fa8ff"><input type="checkbox" id="qOpen" ${S.qOpen ? "checked" : ""}>Explain all</label></div>` + (Object.keys(BOOK).map(b => {
+    const list = qs.filter(q => q.book == b);
+    return list.length ? `<h2 class="qbook" style="color:${BOOK[b].color}">${BOOK[b].short} · ${BOOK[b].title}</h2><div class="grid">${list.map(card).join("")}</div>` : "";
+  }).join("") || `<p class="muted">No quotes match “${S.q}”.</p>`);
+}
+$("#quotes").addEventListener("change", e => { if (e.target.id === "qOpen") { S.qOpen = e.target.checked; drawQuotes(); } });
+$("#quotes").addEventListener("click", e => { const b = e.target.closest("[data-c]"); if (b) openChar(b.dataset.c); });
+
+/* ───────── side panel ───────── */
+const panel = $("#panel"), pbody = $("#panel .body");
+function openChar(id) {
+  const c = CH.get(id), f = FAC[c.f];
+  S.focus = { type: "c", id };
+  const rel = DATA.links.filter(l => l.s === id || l.t === id).map(l => [CH.get(l.s === id ? l.t : l.s), l.label]).filter(([o]) => charOn(o));
+  const evs = EV.filter(e => e.chars.includes(id));
+  const qs = DATA.quotes.filter(q => q.who === id && !q.by);
+  pbody.innerHTML = `
+    <div class="ph">${avatar(c, 64)}<div>
+      <h2>${nm(c)}</h2>
+      ${S.nf && c.nf && c.nf.name !== c.name && !c.nfOnly ? `<div class="muted">In the books: ${c.name}</div>` : ""}
+      <span class="tag" style="--c:${f.color}">${f.label}</span>${c.books.map(b => `<span class="tag" style="--c:${BOOK[b].color}">${BOOK[b].short}</span>`).join("")}
+    </div></div>
+    <p>${c.bio}</p>
+    ${c.nf ? `<div class="nfbox">${c.nf.img ? `<img src="img/${c.nf.img}" alt="">` : ""}<div><span class="nfbadge">NETFLIX</span> <b>${c.nf.name}</b>${c.nf.actor ? `<br><span class="muted">${c.nf.actor}</span>` : ""}${c.nf.note ? `<p>${c.nf.note}</p>` : ""}</div></div>`
+           : `<div class="nfbox"><div><span class="nfbadge">NETFLIX</span> <span class="muted">Not in Season 1</span></div></div>`}
+    ${rel.length ? `<h3>Connections</h3><ul>${rel.map(([o, lab]) => `<li><button data-c="${o.id}">${avatar(o, 26)}${nm(o)}<small>${lab}</small></button></li>`).join("")}</ul>` : ""}
+    ${evs.length ? `<h3>Key events</h3><ul>${evs.map(e => `<li><button data-e="${e.id}"><span class="when" style="color:${BOOK[e.book].color};min-width:84px">${e.when}</span>${e.title}</button></li>`).join("")}</ul>` : ""}
+    ${qs.length ? `<h3>Quotes</h3>${qs.map(q => `<p style="font-family:Georgia,serif">“${q.text}”</p>`).join("")}` : ""}`;
+  panel.hidden = false; refresh();
+}
+function openEvent(id, zoomTo = true) {
+  const e = EV.find(x => x.id === id), era = eraOf(e.t);
+  S.focus = { type: "e", id };
+  const list = EV.filter(evOn), i = list.indexOf(e);
+  pbody.innerHTML = `
+    <div class="when" style="color:${BOOK[e.book].color}">${e.when} · ${era.name}</div>
+    <h2>${e.title}</h2>
+    ${bookTag(e.book)} ${e.nf ? nfBadge : ""}
+    <p>${e.desc}</p>
+    ${e.chars.length ? `<h3>Who</h3><ul>${e.chars.map(id => CH.get(id)).map(c => `<li><button data-c="${c.id}">${avatar(c, 26)}${nm(c)}</button></li>`).join("")}</ul>` : ""}
+    <h3>Era</h3><p class="muted"><b style="color:var(--text)">${era.name}</b> (${era.range}) — ${era.note}</p>
+    <div class="navbtns"><button data-e="${list[i - 1]?.id || ""}" ${i > 0 ? "" : "disabled"}>← Earlier</button><button data-e="${list[i + 1]?.id || ""}" ${i < list.length - 1 ? "" : "disabled"}>Later →</button></div>`;
+  panel.hidden = false;
+  if (zoomTo) { if (S.view !== "timeline") show("timeline"); TL.focusEvent(e); }
+  refresh();
+}
+function closePanel() { panel.hidden = true; S.focus = null; refresh(); }
+panel.addEventListener("click", e => {
+  if (e.target.closest(".close")) return closePanel();
+  const c = e.target.closest("[data-c]"), ev = e.target.closest("[data-e]");
+  if (c) openChar(c.dataset.c); else if (ev && ev.dataset.e) openEvent(ev.dataset.e);
+});
+document.addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT") return;
+  if (e.key === "Escape") closePanel();
+  if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+    const list = EV.filter(evOn);
+    const i = S.focus?.type === "e" ? list.findIndex(x => x.id === S.focus.id) : -1;
+    const n = list[e.key === "ArrowRight" ? i + 1 : (i < 0 ? list.length : i) - 1];
+    if (n) openEvent(n.id);
+  }
+});
+
+/* ───────── refresh ───────── */
+function refresh(structural) {
+  if (S.view === "timeline") TL.draw();
+  if (S.view === "network") structural ? NET.update() : NET.style();
+  if (S.view === "quotes") drawQuotes();
+  // re-render open panel so Netflix names / filters apply
+  if (structural && S.focus && !panel.hidden) { const f = S.focus; f.type === "c" ? openChar(f.id) : openEvent(f.id, false); }
+}
+window.addEventListener("resize", () => { if (S.view !== "quotes") refresh(true); }); // quotes reflow on their own; re-rendering would collapse open explanations
+refresh(true);
+</script>
+<script src="darkforest.js"></script>
+<script src="trisolaris.js"></script>
+<script src="fairytales.js"></script>
+</body>
+</html>
