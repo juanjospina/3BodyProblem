@@ -100,7 +100,7 @@
 
     <h3 class="sec"><span>1</span>Why fairy tales?</h3>
     <p>Yun Tianming's brain was launched toward the Trisolaran fleet in the Staircase Project. The Trisolarans caught it and grew him a new body. Centuries later he is allowed one conversation with Cheng Xin, relayed by sophon. The condition: <b>no technical or political secrets.</b> Every word is monitored, and the call would be cut instantly.</p>
-    <div class="fig"><svg id="taleFlow" viewBox="0 0 900 150" style="width:100%;height:auto;display:block"></svg></div>
+    <div class="fig svgscroll"><svg id="taleFlow" viewBox="0 0 900 150" style="width:100%;height:auto;display:block"></svg></div>
     <div class="cards">
       <div class="card" style="--c:#c084fc"><h4>A blind spot</h4><p>Trisolarans think “transparently”: they show their thoughts directly and rarely need metaphor or deception. Layered stories are exactly what they are bad at reading.</p></div>
       <div class="card" style="--c:#c084fc"><h4>A perfect cover</h4><p>Tianming had been telling the Trisolarans many of Earth's fairy tales, and these three went in among them (they were even published there). Children's stories raised no alarm.</p></div>
@@ -174,6 +174,7 @@
     dec.hidden = false;
   }
   dec.addEventListener("click", e => { if (e.target.closest(".close")) dec.hidden = true; });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") dec.hidden = true; });
   $id("decodeMode").onchange = e => $id("taleText").classList.toggle("decode", e.target.checked);
   $id("taleText").addEventListener("click", e => {
     const sp = e.target.closest(".sym");
@@ -206,13 +207,14 @@
     [["Clue in the story", 175, "end"], ["Hidden idea", 390, "start"], ["What it tells humanity", 620, "start"]].forEach(([t, x, a]) =>
       svg.append("text").attr("x", x).attr("y", 10).attr("text-anchor", a).attr("fill", "#8a90a6").attr("font-size", 11).attr("letter-spacing", ".1em").text(t.toUpperCase()));
     // hover: trace everything connected to a node (downstream from a clue, upstream into a path)
-    svg.selectAll(".mapnode").on("mouseenter", function () {
+    svg.selectAll(".mapnode").on("pointerenter", function (ev) {
+      if (ev.pointerType === "touch") return;
       const id = this.dataset.id, on = new Set([id]);
       links.forEach(l => { if (l.a === id) on.add(l.b); if (l.b === id) on.add(l.a); });
       if (id.startsWith("s:")) links.forEach(l => { if (on.has(l.a) && l.a.startsWith("c:")) on.add(l.b); });
       gl.attr("opacity", l => on.has(l.a) && on.has(l.b) ? .95 : .06).attr("stroke-width", l => on.has(l.a) && on.has(l.b) ? 3 : 2);
       svg.selectAll(".mapnode").attr("opacity", function () { return on.has(this.dataset.id) ? 1 : .3; });
-    }).on("mouseleave", () => { gl.attr("opacity", .35).attr("stroke-width", 2); svg.selectAll(".mapnode").attr("opacity", 1); });
+    }).on("pointerleave", () => { gl.attr("opacity", .35).attr("stroke-width", 2); svg.selectAll(".mapnode").attr("opacity", 1); });
   })();
 
   /* ───── sim 1: soap boat / curvature drive ───── */
@@ -234,7 +236,7 @@
     if (mode === "boat") {
       ctx.fillStyle = "#0d2a44"; ctx.fillRect(0, y0, w, h - y0);
       // soapy (low tension) water behind the boat
-      if (bx > .19 || soap) { const g = ctx.createLinearGradient(.18 * w, 0, X, 0); g.addColorStop(0, "#3a6f9a00"); g.addColorStop(1, "#7fb8e0aa"); ctx.fillStyle = g; ctx.fillRect(.15 * w, y0, X - .15 * w - 22, h - y0); }
+      if (bx > .19 || soap) { const g = ctx.createLinearGradient(.18 * w, 0, X, 0); g.addColorStop(0, "#3a6f9a00"); g.addColorStop(1, "#7fb8e0aa"); ctx.fillStyle = g; ctx.fillRect(.15 * w, y0, Math.max(0, X - .15 * w - 22), h - y0); }
       for (let i = 0; i < 9; i++) { const yy = y0 + 8 + i * 12; ctx.strokeStyle = "#2b5d86"; ctx.beginPath(); for (let x = 0; x <= w; x += 8) ctx.lineTo(x, yy + Math.sin(x / 20 + t / 400 + i) * 1.5); ctx.stroke(); }
       ctx.fillStyle = "#e8e2d0"; ctx.beginPath(); ctx.moveTo(X - 28, y0 - 2); ctx.lineTo(X + 34, y0 - 2); ctx.lineTo(X + 18, y0 + 12); ctx.lineTo(X - 20, y0 + 12); ctx.fill();
       ctx.beginPath(); ctx.moveTo(X, y0 - 2); ctx.lineTo(X, y0 - 40); ctx.lineTo(X + 24, y0 - 8); ctx.fill();
@@ -249,7 +251,7 @@
         ctx.beginPath(); ctx.moveTo(gx + warp, 0); ctx.lineTo(gx + warp, h); ctx.stroke();
       }
       for (let gy = 14; gy < h; gy += 28) { ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(w, gy); ctx.stroke(); }
-      if (bx > .19) { const g = ctx.createLinearGradient(.18 * w, 0, X, 0); g.addColorStop(0, "#8fa8ff10"); g.addColorStop(1, "#8fa8ff55"); ctx.fillStyle = g; ctx.fillRect(.18 * w, y0 - 14, X - .18 * w - 20, 28); ctx.fillStyle = "#8fa8ff"; ctx.font = "11px system-ui"; ctx.fillText("trail of slow light", .2 * w, y0 + 30); }
+      if (bx > .19) { const g = ctx.createLinearGradient(.18 * w, 0, X, 0); g.addColorStop(0, "#8fa8ff10"); g.addColorStop(1, "#8fa8ff55"); ctx.fillStyle = g; ctx.fillRect(.18 * w, y0 - 14, Math.max(0, X - .18 * w - 20), 28); ctx.fillStyle = "#8fa8ff"; ctx.font = "11px system-ui"; ctx.fillText("trail of slow light", .2 * w, y0 + 30); }
       ctx.fillStyle = "#e7ecff"; ctx.beginPath(); ctx.moveTo(X + 30, y0); ctx.lineTo(X - 18, y0 - 12); ctx.lineTo(X - 12, y0); ctx.lineTo(X - 18, y0 + 12); ctx.fill();
       ctx.fillStyle = "#8a90a6"; ctx.font = "12px system-ui";
       ctx.fillText("flattened space ←", Math.max(8, X - 150), 22); ctx.fillText("→ curved space pulls", Math.min(w - 130, X + 40), 22);
@@ -257,7 +259,7 @@
   }
 
   /* ───── sim 2: black domain ───── */
-  let photons = [];
+  let photons = [], bdWas = null;
   const kms = () => 300000 * Math.pow(10, -5 * (+$id("bdS").value) / 1000); // 300,000 km/s → 3 km/s
   function drawBD() {
     const cv = $id("bdCv"); if (!visible(cv)) return;
@@ -266,7 +268,7 @@
     const v = kms(), vin = 3.2 * Math.pow(v / 300000, .2), vth = 3.2 * Math.pow(ESC / 300000, .2), g = vth * vth / (2 * R);
     $id("bdV").textContent = v >= 1000 ? d3.format(",.0f")(v) + " km/s" : v.toFixed(1) + " km/s";
     const trapped = v < ESC;
-    $id("bdTxt").innerHTML = trapped
+    if (trapped !== bdWas) $id("bdTxt").innerHTML = (bdWas = trapped)
       ? "<b style='color:#8fa8ff'>Black domain.</b> Light inside is slower than the Solar System's escape velocity (≈16.7 km/s). Nothing gets out, so from outside it looks like a black hole. To any watching hunter, this is a <b>safety notice</b>: this civilization can never leave, so it is no threat. It is also a prison: no one inside can ever leave either."
       : "Normal space: light pours out of the Sun and can be seen across the galaxy. Drag the slider to slow light down inside the dashed sphere, like the bubbles caught and pressed into soap.";
     for (let i = 0; i < 4; i++) { const a = Math.random() * Math.PI * 2; photons.push({ a, r: 12, v: vin, out: false }); }
@@ -284,5 +286,6 @@
     ctx.fillStyle = "#8a90a6"; ctx.font = "12px system-ui"; ctx.fillText(trapped ? "Seen from outside: a black hole" : "Seen from outside: a bright star", 10, h - 10);
   }
 
-  (function loop(t) { drawSoap(t); drawBD(); requestAnimationFrame(loop); })(0);
+  const gate = frameGate();
+  (function loop(t) { requestAnimationFrame(loop); if (gate(t)) { drawSoap(t); drawBD(); } })(0);
 })();

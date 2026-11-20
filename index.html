@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Remembrance of Earth's Past · Map</title>
 <style>
-:root{--bg:#06070c;--panel:#0f121b;--line:#222839;--text:#e7e9f0;--muted:#8a90a6;--band1:#0b0e17;--band2:#0e1220;--nf:#e50914}
+:root{color-scheme:dark;--bg:#06070c;--panel:#0f121b;--line:#222839;--text:#e7e9f0;--muted:#8a90a6;--band1:#0b0e17;--band2:#0e1220;--nf:#e50914}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
 body{background:var(--bg) radial-gradient(ellipse at 70% -20%,#1a1f3a 0,transparent 60%);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;overflow:hidden}
@@ -13,12 +13,13 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:10px 16px;border-bottom:1px solid var(--line)}
 h1{font:600 17px/1.1 Georgia,serif;margin:0;letter-spacing:.02em}
 h1 small{display:block;font:12px system-ui;color:var(--muted);letter-spacing:0}
-#tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px}
-#tabs button{padding:6px 14px;border-radius:7px;color:var(--muted)}
+#tabs{display:flex;gap:4px;max-width:100%;overflow-x:auto;scrollbar-width:none;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px}
+#tabs button{flex:none;white-space:nowrap;padding:6px 14px;border-radius:7px;color:var(--muted)}
 #tabs button.on{background:#1d2335;color:var(--text)}
 #filters{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-left:auto}
-.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--line);border-radius:999px;cursor:pointer;user-select:none;font-size:13px;color:var(--muted)}
-.chip input{display:none}
+.chip{position:relative;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--line);border-radius:999px;cursor:pointer;user-select:none;font-size:13px;color:var(--muted)}
+.chip input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.chip:has(input:focus-visible){outline:2px solid var(--c);outline-offset:2px}
 .chip:has(input:checked){color:var(--text);border-color:var(--c);background:color-mix(in srgb,var(--c) 15%,transparent)}
 .chip i{width:8px;height:8px;border-radius:50%;background:var(--c)}
 .chip img{height:16px;border-radius:3px}
@@ -104,6 +105,7 @@ body[data-view=cosmic] #filters,body[data-view=trisolaris] #filters,body[data-vi
 .sec span{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:50%;background:#1d2335;font:700 14px system-ui;color:#c7cbe0}
 .article p{max-width:780px}
 .article q{font-style:italic}
+.svgscroll{overflow-x:auto}.svgscroll>svg{min-width:640px}
 .fig{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin:16px 0}
 .two{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;align-items:start}
 @media (max-width:820px){.two{grid-template-columns:1fr}}
@@ -153,8 +155,10 @@ table.matrix{border-collapse:separate;border-spacing:6px;width:100%;max-width:78
 #decoder .close{float:right;font-size:20px;color:var(--muted)}
 .mapnode text{paint-order:stroke;stroke:var(--panel);stroke-width:4px}
 .qbook{font:600 20px Georgia,serif;margin:22px auto 12px;max-width:1300px}
-@media (max-width:700px){#filters{margin-left:0}#search{width:110px}h1 small{display:none}}
+@media (max-width:700px){#filters{margin-left:0}#search{width:110px}h1 small{display:none}.hint{display:none}
+  body[data-view=cosmic] #filters,body[data-view=trisolaris] #filters,body[data-view=tales] #filters{display:none}}
 #disclaimer{padding:5px 16px;border-top:1px solid var(--line);color:var(--muted);font-size:11px;text-align:center}
+@media (max-width:700px){#disclaimer{max-height:3.3em;overflow-y:auto}}
 </style>
 </head>
 <body>
@@ -199,7 +203,7 @@ table.matrix{border-collapse:separate;border-spacing:6px;width:100%;max-width:78
     <p>Possible answers to the paradox:</p>
     <div class="cards">
       <div class="card"><h4>Rare Earth</h4><p>Complex life needs so many lucky accidents that we might be nearly alone.</p></div>
-      <div class="card"><h4>The Great Filter</h4><p>Some step (life, intelligence, or surviving one's own technology) is almost impossible. It may still be ahead of us.</p></div>
+      <div class="card"><h4>The Great Filter</h4><p>Some step (life, intelligence, or surviving one's own technology) is almost impossible. It may still be ahead of us. <span class="muted">(Robin Hanson, 1996)</span></p></div>
       <div class="card"><h4>Too far, too brief</h4><p>Civilizations are separated by vast distances and times, and their signals fade before anyone hears them.</p></div>
       <div class="card"><h4>The Zoo</h4><p>They know we're here and are deliberately leaving us alone.</p></div>
       <div class="card star"><h4>★ The Dark Forest</h4><p>The universe is full of life, and all of it is hiding. Any civilization that reveals itself gets destroyed. Silence is how you survive.</p><span class="meta">Liu Cixin · The Dark Forest</span></div>
@@ -307,7 +311,7 @@ table.matrix{border-collapse:separate;border-spacing:6px;width:100%;max-width:78
     <h3 class="sec"><span>3</span>Contact and invasion: the 4.2-light-year gap</h3>
     <p>Everything moves at or below light speed. Drag the slider or press play. <span class="muted">(Dates approximate.)</span></p>
     <div class="fig">
-      <svg id="gap" viewBox="0 0 900 210" style="width:100%;height:auto;display:block"></svg>
+      <div class="svgscroll"><svg id="gap" viewBox="0 0 900 210" style="width:100%;height:auto;display:block"></svg></div>
       <div class="controls">
         <button class="btn" id="gapPlay">▶ Play</button>
         <input type="range" id="gapYear" min="1969" max="2280" step="0.1" value="1969" style="flex:1;min-width:200px">
@@ -339,7 +343,7 @@ table.matrix{border-collapse:separate;border-spacing:6px;width:100%;max-width:78
 <footer id="disclaimer">Unofficial, non-commercial fan project made for personal study. It is intended as a transformative work: original summaries, commentary, analysis and interactive visualizations. <i>Remembrance of Earth's Past</i> belongs to Liu Cixin (translated by Ken Liu and Joel Martinsen; published by Tor Books). <i>3 Body Problem</i>, its character images and related material belong to Netflix and their respective owners. Short quotes are used for commentary only. Not affiliated with or endorsed by any rights holder.</footer>
 <div id="tip" hidden></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" integrity="sha512-vc58qvvBdrDR4etbxMdlTt4GBQk1qjvyORR2nrsPsFPyrs+/u5c3+1Ct6upOgdZoIl7eq6k3a1UPDSNAQi/32A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="data.js"></script>
 <script>
 // size a canvas to its CSS box (HiDPI aware); returns null while hidden
@@ -350,6 +354,11 @@ function fitCanvas(cv) {
   if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
   const ctx = cv.getContext("2d"); ctx.setTransform(d, 0, 0, d, 0, 0);
   return { ctx, w: r.width, h: r.height };
+}
+// simulations advance one step per frame: cap loops at ~60 fps so they run at the same speed on 120/144 Hz screens
+function frameGate() {
+  let last = -1e9;
+  return t => { if (t - last < 15) return false; last = Math.max(last + 1000 / 60, t - 100); return true; };
 }
 const S = { books: new Set([1, 2, 3]), nf: false, q: "", view: "timeline", focus: null };
 const $ = s => document.querySelector(s);
@@ -364,7 +373,7 @@ const color = c => FAC[c.f].color;
 const initials = s => { const w = s.replace(/[“(].*?[”)]/g, "").split(/\s+/).filter(Boolean); return w.length > 1 ? w.map(x => x[0]).join("").slice(0, 2) : w[0].slice(0, 2); };
 const photo = c => S.nf && c.nf && c.nf.img ? "img/" + c.nf.img : null;
 const eraOf = t => DATA.eras.find(e => t >= e.from && t < e.to) || DATA.eras.at(-1);
-const hayChar = c => [c.name, c.bio, c.nf?.name, c.nf?.actor].join(" ").toLowerCase();
+const hayChar = c => [c.name, c.bio, c.nf?.name, c.nf?.actor].filter(Boolean).join(" ").toLowerCase();
 const hayEv = e => [e.title, e.desc, e.when, ...e.chars.map(id => CH.get(id).name + " " + (CH.get(id).nf?.name || ""))].join(" ").toLowerCase();
 const hit = h => !S.q || h.includes(S.q);
 const avatar = (c, px) => `<span class="av" style="--c:${color(c)};width:${px}px;height:${px}px;font-size:${px * .38}px">${photo(c) ? `<img src="${photo(c)}" alt="">` : initials(nm(c))}</span>`;
@@ -401,7 +410,12 @@ function show(v) {
 
 /* ───────── tooltip ───────── */
 const tip = $("#tip");
-const tipShow = (ev, html) => { tip.innerHTML = html; tip.hidden = false; tip.style.left = ev.clientX + 14 + "px"; tip.style.top = ev.clientY + 14 + "px"; };
+const tipShow = (ev, html) => {
+  if (ev.pointerType === "touch") return; // taps never fire a leave event, so the tip would stick
+  tip.innerHTML = html; tip.hidden = false;
+  tip.style.left = Math.min(ev.clientX + 14, innerWidth - tip.offsetWidth - 8) + "px";
+  tip.style.top = Math.min(ev.clientY + 14, innerHeight - tip.offsetHeight - 8) + "px";
+};
 const tipHide = () => tip.hidden = true;
 
 /* ───────── timeline ───────── */
@@ -445,7 +459,7 @@ const TL = (() => {
       const g = en.append("g").attr("class", "era");
       g.append("rect"); g.append("text").attr("class", "t"); g.append("text").attr("class", "sub");
       g.on("click", (ev, d) => fit(base(d.from), base(d.to)))
-       .on("mousemove", (ev, d) => tipShow(ev, `<b>${d.name}</b> <span class="muted">${d.range}</span><br>${d.note}`)).on("mouseleave", tipHide);
+       .on("pointermove", (ev, d) => tipShow(ev, `<b>${d.name}</b> <span class="muted">${d.range}</span><br>${d.note}`)).on("pointerleave", tipHide);
       return g;
     }).each(function (d, i) {
       const x0 = X(d.from), x1 = X(d.to), g = d3.select(this);
@@ -477,15 +491,16 @@ const TL = (() => {
       const g = en.append("g").attr("class", "lane"); g.append("line"); g.append("text"); return g;
     }).attr("opacity", b => S.books.has(b) ? 1 : .25)
       .call(g => g.select("line").attr("x1", 0).attr("x2", W).attr("y1", laneY).attr("y2", laneY).attr("stroke", b => BOOK[b].color))
-      .call(g => g.select("text").attr("x", 10).attr("y", b => laneY(b) - 62).attr("fill", b => BOOK[b].color).text(b => `${BOOK[b].short} · ${BOOK[b].title}`));
+      .call(g => g.select("text").attr("x", 10).attr("y", b => laneY(b) - ((H - TOP - BOT - 40) / 3 < 130 ? 34 : 62)).attr("fill", b => BOOK[b].color).text(b => `${BOOK[b].short} · ${BOOK[b].title}`));
 
     // events with label decluttering: 4 label rows per lane, first free row wins
-    const rows = { 1: [], 2: [], 3: [] }, OFF = [-14, 26, -32, 44];
+    const tight = (H - TOP - BOT - 40) / 3 < 130; // short screens: 2 label rows, the rest appear on zoom
+    const rows = { 1: [], 2: [], 3: [] }, OFF = tight ? [-14, 26] : [-14, 26, -32, 44];
     gEv.selectAll("g.ev").data(EV.filter(evOn), d => d.id).join(en => {
       const g = en.append("g").attr("class", "ev");
       g.append("line"); g.append("circle").attr("class", "nfring").attr("r", 11); g.append("circle").attr("class", "dot").attr("r", 7); g.append("text").attr("text-anchor", "middle");
       g.on("click", (ev, d) => openEvent(d.id, false))
-       .on("mousemove", (ev, d) => tipShow(ev, `<b>${d.title}</b><br><span class="muted">${d.when}</span>`)).on("mouseleave", tipHide);
+       .on("pointermove", (ev, d) => tipShow(ev, `<b>${d.title}</b><br><span class="muted">${d.when}</span>`)).on("pointerleave", tipHide);
       return g;
     }).each(function (d) {
       const g = d3.select(this), x = X(d.t), y = laneY(d.book), r = rows[d.book];
@@ -543,7 +558,7 @@ const NET = (() => {
       g.append("image").attr("x", -20).attr("y", -20).attr("width", 40).attr("height", 40).attr("clip-path", "url(#clipc)").attr("preserveAspectRatio", "xMidYMid slice");
       g.append("text").attr("class", "nm").attr("dy", 38);
       g.on("click", (ev, d) => openChar(d.id))
-       .on("mouseenter", (ev, d) => { hover = d.id; style(); }).on("mouseleave", () => { hover = null; style(); })
+       .on("pointerenter", (ev, d) => { if (ev.pointerType !== "touch") { hover = d.id; style(); } }).on("pointerleave", () => { if (hover) { hover = null; style(); } })
        .call(d3.drag()
          .on("start", (ev, d) => { if (!ev.active) sim.alphaTarget(.2).restart(); d.fx = d.x; d.fy = d.y; })
          .on("drag", (ev, d) => { d.fx = ev.x; d.fy = ev.y; })
@@ -578,7 +593,9 @@ const NET = (() => {
 })();
 
 /* ───────── quotes ───────── */
+let qKey;
 function drawQuotes() {
+  const key = [S.q, S.nf, S.qOpen].join("|"); if (key === qKey) return; qKey = key; // re-rendering would collapse open explanations
   const card = q => {
     const c = CH.get(q.who);
     return `<figure class="q" style="--c:${BOOK[q.book].color}">
@@ -589,12 +606,12 @@ function drawQuotes() {
       <details ${S.qOpen ? "open" : ""}><summary>Explain</summary><p>${q.why}</p></details></figure>`;
   };
   // all quotes, grouped by book; only the search box filters them
-  const qs = DATA.quotes.filter(q => { const c = CH.get(q.who); return hit([q.text, q.ctx, q.by, q.why, c?.name, c?.nf?.name].join(" ").toLowerCase()); });
+  const qs = DATA.quotes.filter(q => { const c = CH.get(q.who); return hit([q.text, q.ctx, q.by, q.why, c?.name, c?.nf?.name].filter(Boolean).join(" ").toLowerCase()); });
   $("#quotes .qwrap").innerHTML = `<div class="qbar"><span class="muted">${qs.length} quotes · use the search box to filter</span>
     <label class="chip" style="--c:#8fa8ff"><input type="checkbox" id="qOpen" ${S.qOpen ? "checked" : ""}>Explain all</label></div>` + (Object.keys(BOOK).map(b => {
     const list = qs.filter(q => q.book == b);
     return list.length ? `<h2 class="qbook" style="color:${BOOK[b].color}">${BOOK[b].short} · ${BOOK[b].title}</h2><div class="grid">${list.map(card).join("")}</div>` : "";
-  }).join("") || `<p class="muted">No quotes match “${S.q}”.</p>`);
+  }).join("") || `<p class="muted">No quotes match “${S.q.replace(/&/g, "&amp;").replace(/</g, "&lt;")}”.</p>`);
 }
 $("#quotes").addEventListener("change", e => { if (e.target.id === "qOpen") { S.qOpen = e.target.checked; drawQuotes(); } });
 $("#quotes").addEventListener("click", e => { const b = e.target.closest("[data-c]"); if (b) openChar(b.dataset.c); });
@@ -605,7 +622,7 @@ function openChar(id) {
   const c = CH.get(id), f = FAC[c.f];
   S.focus = { type: "c", id };
   const rel = DATA.links.filter(l => l.s === id || l.t === id).map(l => [CH.get(l.s === id ? l.t : l.s), l.label]).filter(([o]) => charOn(o));
-  const evs = EV.filter(e => e.chars.includes(id));
+  const evs = EV.filter(e => e.chars.includes(id) && evOn(e));
   const qs = DATA.quotes.filter(q => q.who === id && !q.by);
   pbody.innerHTML = `
     <div class="ph">${avatar(c, 64)}<div>
@@ -644,9 +661,9 @@ panel.addEventListener("click", e => {
   if (c) openChar(c.dataset.c); else if (ev && ev.dataset.e) openEvent(ev.dataset.e);
 });
 document.addEventListener("keydown", e => {
+  if (e.key === "Escape") return closePanel();
   if (e.target.tagName === "INPUT") return;
-  if (e.key === "Escape") closePanel();
-  if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+  if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && S.view === "timeline") {
     const list = EV.filter(evOn);
     const i = S.focus?.type === "e" ? list.findIndex(x => x.id === S.focus.id) : -1;
     const n = list[e.key === "ArrowRight" ? i + 1 : (i < 0 ? list.length : i) - 1];
@@ -662,7 +679,7 @@ function refresh(structural) {
   // re-render open panel so Netflix names / filters apply
   if (structural && S.focus && !panel.hidden) { const f = S.focus; f.type === "c" ? openChar(f.id) : openEvent(f.id, false); }
 }
-window.addEventListener("resize", () => { if (S.view !== "quotes") refresh(true); }); // quotes reflow on their own; re-rendering would collapse open explanations
+window.addEventListener("resize", () => refresh()); // non-structural: redraws the timeline without reshuffling the network
 refresh(true);
 </script>
 <script src="darkforest.js"></script>

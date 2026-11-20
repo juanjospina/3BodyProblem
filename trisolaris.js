@@ -26,7 +26,7 @@
   const planetAround = h => ({ x: h.x + R0, y: h.y, vx: h.vx, vy: h.vy + Math.sqrt(h.m / R0), m: 0, planet: true });
   function make(p) {
     let s;
-    if (p === "eight") {
+    if (p === "eight") { // initial conditions from Chenciner & Montgomery (2000), Annals of Mathematics 152; orbit first found by C. Moore (1993)
       const x = -0.97000436, y = 0.24308753, vx = -0.93240737, vy = -0.86473146;
       s = [{ x, y, vx: -vx / 2, vy: -vy / 2, m: 1 }, { x: -x, y: -y, vx: -vx / 2, vy: -vy / 2, m: 1 }, { x: 0, y: 0, vx, vy, m: 1 }];
     } else if (p === "sun") {
@@ -44,7 +44,7 @@
     sys = make(preset); t = 0; dead = null; stress = 0; cam = null;
     if (newCiv) civ++; else civ = 1;
     twin = null;
-    if ($id("tbTwin").checked && preset !== "sun") {
+    if ($id("tbTwin").checked && preset === "chaos") {
       twin = sys.map(b => ({ ...b, tr: [] })); twin[0].x += 1e-6; accel(twin);
     }
   }
@@ -57,7 +57,9 @@
   document.querySelectorAll("[data-preset]").forEach(b => b.onclick = () => {
     preset = b.dataset.preset;
     document.querySelectorAll("[data-preset]").forEach(x => x.classList.toggle("on", x === b));
-    $id("tbInfo").textContent = INFO[preset]; restart(false);
+    $id("tbInfo").textContent = INFO[preset];
+    $id("tbTwin").disabled = preset !== "chaos"; $id("tbTwin").parentElement.style.opacity = preset === "chaos" ? 1 : .4; // twin compares planets; only the random preset has one
+    restart(false);
   });
   $id("tbPause").onclick = () => { paused = !paused; $id("tbPause").textContent = paused ? "▶ Play" : "⏸ Pause"; };
   $id("tbNew").onclick = () => restart(true);
@@ -265,5 +267,6 @@
     `<div class="techgroup" style="color:${col}">${g} technology</div><div class="cards">${list.map(([n, d, b]) =>
       `<div class="card" style="--c:${col}"><h4>${n}</h4><p>${d}</p><span class="meta">Book ${b}</span></div>`).join("")}</div>`).join("");
 
-  (function loop() { drawSim(); tickGap(); requestAnimationFrame(loop); })();
+  const gate = frameGate();
+  (function loop(t) { requestAnimationFrame(loop); if (gate(t)) { drawSim(); tickGap(); } })(0);
 })();

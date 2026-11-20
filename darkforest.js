@@ -62,7 +62,7 @@
 
   /* ───── 3. Chain of suspicion ───── */
   const chainEl = $id("chain");
-  chainEl.innerHTML = `<svg viewBox="0 0 800 190" style="width:100%;height:auto;display:block"></svg>
+  chainEl.innerHTML = `<div class="svgscroll"><svg viewBox="0 0 800 190" style="width:100%;height:auto;display:block"></svg></div>
     <div class="controls"><label>Layers of thinking <input type="range" id="chainK" min="1" max="7" value="1"></label><span class="readout" id="chainR"></span></div>
     <ul class="chainlist" id="chainL"></ul>`;
   function chainQ(k) {
@@ -90,7 +90,7 @@
 
   /* ───── 4. Technological explosion ───── */
   const tx = $id("techx");
-  tx.innerHTML = `<svg viewBox="0 0 820 320" style="width:100%;height:auto;display:block"></svg>
+  tx.innerHTML = `<div class="svgscroll"><svg viewBox="0 0 820 320" style="width:100%;height:auto;display:block"></svg></div>
     <div class="controls"><label>Fleet travel time <input type="range" id="txT" min="20" max="450" value="450"> <b id="txTv"></b></label>
     <label class="btn"><input type="checkbox" id="txS" checked> Sophons lock Earth's basic science</label></div>
     <p class="readout" id="txR" style="margin:10px 0 0"></p>`;
@@ -139,7 +139,7 @@
   }
   reset();
   const pos = (s, w, h) => [s.x * w, s.y * h];
-  function broadcast(origin, target) { if (!origin.alive || !target.alive) return; waves.push({ origin, target, r: 0, heard: new Set() }); target.revealed = true; sent++; }
+  function broadcast(origin, target) { if (!origin.alive || !target.alive) return; waves.push({ origin, target, r: 0, heard: new Set() }); if (!target.revealed) sent++; target.revealed = true; }
   cv.addEventListener("click", e => {
     const r = cv.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
     let best = null, bd = 18;
@@ -205,5 +205,6 @@
     $id("fStats").textContent = `Revealed: ${sent} · Destroyed: ${killed}${spellTarget && !spellTarget.alive && earthStar.alive ? " · The spell worked, and Earth was never revealed." : ""}`;
   }
 
-  (function loop(t) { drawGalaxy(t); drawForest(t); requestAnimationFrame(loop); })(0);
+  const gate = frameGate();
+  (function loop(t) { requestAnimationFrame(loop); if (gate(t)) { drawGalaxy(t); drawForest(t); } })(0);
 })();
