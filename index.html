@@ -68,6 +68,10 @@ main{flex:1;position:relative;min-height:0}
 .q{break-inside:avoid;margin:0 0 14px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--c);border-radius:10px;padding:16px}
 .q blockquote{margin:0 0 12px;font:17px/1.4 Georgia,serif}
 .q blockquote::before{content:"“";color:var(--c);font-size:28px;line-height:0;vertical-align:-10px;margin-right:2px}
+.q blockquote.long{font-size:15px;line-height:1.55}
+.q blockquote:has(.who)::before,.q blockquote:has(.who)::after{content:none}
+.q blockquote .who{display:inline-block;min-width:38px;font:700 11px system-ui;letter-spacing:.06em;text-transform:uppercase;color:var(--c);margin-right:4px}
+.q blockquote::after{content:"”";color:var(--c);font-size:28px;line-height:0;vertical-align:-10px;margin-left:2px}
 .q footer{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
 .q footer button{display:inline-flex;align-items:center;gap:6px;color:var(--text);font-weight:600}
 /* panel */
@@ -599,15 +603,15 @@ function drawQuotes() {
   const card = q => {
     const c = CH.get(q.who);
     return `<figure class="q" style="--c:${BOOK[q.book].color}">
-      <blockquote>${q.text}</blockquote>
+      <blockquote${q.text.length > 400 ? ' class="long"' : ""}>${q.text}</blockquote>
       <footer>${c ? `<button data-c="${c.id}">${avatar(c, 24)}${q.by || nm(c)}</button>` : `<b style="color:var(--text)">${q.by}</b>`}
         <span>${q.ctx}</span>
         <span style="margin-left:auto">${q.approx ? "≈ paraphrase" : ""}</span>${q.nf ? nfBadge : ""}</footer>
       <details ${S.qOpen ? "open" : ""}><summary>Explain</summary><p>${q.why}</p></details></figure>`;
   };
   // all quotes, grouped by book; only the search box filters them
-  const qs = DATA.quotes.filter(q => { const c = CH.get(q.who); return hit([q.text, q.ctx, q.by, q.why, c?.name, c?.nf?.name].filter(Boolean).join(" ").toLowerCase()); });
-  $("#quotes .qwrap").innerHTML = `<div class="qbar"><span class="muted">${qs.length} quotes · use the search box to filter</span>
+  const qs = DATA.quotes.filter(q => { const c = CH.get(q.who); return hit([q.text.replace(/<[^>]+>/g, " "), q.ctx, q.by, q.why, c?.name, c?.nf?.name].filter(Boolean).join(" ").toLowerCase()); });
+  $("#quotes .qwrap").innerHTML = `<div class="qbar"><span class="muted">${qs.length} quote${qs.length === 1 ? "" : "s"} · use the search box to filter</span>
     <label class="chip" style="--c:#8fa8ff"><input type="checkbox" id="qOpen" ${S.qOpen ? "checked" : ""}>Explain all</label></div>` + (Object.keys(BOOK).map(b => {
     const list = qs.filter(q => q.book == b);
     return list.length ? `<h2 class="qbook" style="color:${BOOK[b].color}">${BOOK[b].short} · ${BOOK[b].title}</h2><div class="grid">${list.map(card).join("")}</div>` : "";
