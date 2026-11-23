@@ -4,9 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Remembrance of Earth's Past · Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Special+Elite&display=swap" rel="stylesheet">
 <style>
 :root{color-scheme:dark;--bg:#06070c;--panel:#0f121b;--line:#222839;--text:#e7e9f0;--muted:#8a90a6;--band1:#0b0e17;--band2:#0e1220;--nf:#e50914}
 *{box-sizing:border-box}
+[hidden]{display:none!important} /* hidden must win over any display rule */
 html,body{height:100%;margin:0}
 body{background:var(--bg) radial-gradient(ellipse at 70% -20%,#1a1f3a 0,transparent 60%);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;overflow:hidden}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
@@ -16,7 +19,8 @@ h1 small{display:block;font:12px system-ui;color:var(--muted);letter-spacing:0}
 #tabs{display:flex;gap:4px;max-width:100%;overflow-x:auto;scrollbar-width:none;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px}
 #tabs button{flex:none;white-space:nowrap;padding:6px 14px;border-radius:7px;color:var(--muted)}
 #tabs button.on{background:#1d2335;color:var(--text)}
-#filters{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-left:auto}
+#filters{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1}
+.hbreak{flex-basis:100%;height:0;margin-top:-10px} /* row 1: title + tabs; row 2: filters (left) + theme switch (right) */
 .chip{position:relative;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--line);border-radius:999px;cursor:pointer;user-select:none;font-size:13px;color:var(--muted)}
 .chip input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
 .chip:has(input:focus-visible){outline:2px solid var(--c);outline-offset:2px}
@@ -37,7 +41,10 @@ main{flex:1;position:relative;min-height:0}
 .era text.sub{fill:var(--muted);font:11px system-ui}
 .tick line{stroke:#1c2132}
 .tick text{fill:var(--muted);font-size:11px}
-.lane line{stroke-width:2;stroke-opacity:.35}
+.lane line{stroke-width:2;stroke-opacity:.6}
+.lane rect{pointer-events:none}
+.now line{stroke:#d9c58f;stroke-dasharray:3 4;stroke-opacity:.7}
+.now text{fill:#d9c58f;font:700 10.5px system-ui;letter-spacing:.14em}
 .lane text{font:600 11px system-ui;letter-spacing:.08em;text-transform:uppercase}
 .ev{cursor:pointer}
 .ev circle{stroke:var(--bg);stroke-width:2;transition:r .15s}
@@ -99,7 +106,7 @@ main{flex:1;position:relative;min-height:0}
 #tip{position:fixed;pointer-events:none;background:#000c;border:1px solid var(--line);padding:4px 8px;border-radius:6px;font-size:12px;max-width:260px}
 
 /* article tabs */
-body[data-view=cosmic] #filters,body[data-view=trisolaris] #filters,body[data-view=tales] #filters{visibility:hidden}
+body[data-view=cosmic] #filters,body[data-view=wall] #filters,body[data-view=trisolaris] #filters,body[data-view=tales] #filters,body[data-view=solar] #filters{visibility:hidden}
 .article{overflow:auto;padding:28px 16px 90px}
 .wrap{max-width:1040px;margin:0 auto}
 .kicker{color:var(--muted);text-transform:uppercase;letter-spacing:.14em;font-size:12px;margin:0}
@@ -159,24 +166,127 @@ table.matrix{border-collapse:separate;border-spacing:6px;width:100%;max-width:78
 #decoder .close{float:right;font-size:20px;color:var(--muted)}
 .mapnode text{paint-order:stroke;stroke:var(--panel);stroke-width:4px}
 .qbook{font:600 20px Georgia,serif;margin:22px auto 12px;max-width:1300px}
-@media (max-width:700px){#filters{margin-left:0}#search{width:110px}h1 small{display:none}.hint{display:none}
-  body[data-view=cosmic] #filters,body[data-view=trisolaris] #filters,body[data-view=tales] #filters{display:none}}
+@media (max-width:700px){.hbreak{display:none}#filters{flex:1 1 100%}#search{width:110px}h1 small{display:none}.hint{display:none}
+  body[data-view=cosmic] #filters,body[data-view=wall] #filters,body[data-view=trisolaris] #filters,body[data-view=tales] #filters,body[data-view=solar] #filters{display:none}}
 #disclaimer{padding:5px 16px;border-top:1px solid var(--line);color:var(--muted);font-size:11px;text-align:center}
-@media (max-width:700px){#disclaimer{max-height:3.3em;overflow-y:auto}}
+@media (max-width:700px){#disclaimer{max-height:3.3em;overflow-y:auto}#themeSw{order:1;margin-left:auto}header #themeSw button{padding:3px 7px;font-size:11px}header h1{font-size:14px}#tabs{order:2}#filters{order:3}}
+/* ───── human computer ───── */
+.hcs.hcin{cursor:pointer}
+.hcs.hcin:hover .hcflag{filter:drop-shadow(0 0 6px #f2c14e)}
+.hctable{border-collapse:collapse;font:13px var(--mono,"Courier New",monospace);margin:8px 0}
+.hctable td,.hctable th{border:1px solid var(--line);padding:3px 10px;text-align:center}
+.hctable tr.on td{background:color-mix(in srgb,#f2c14e 22%,transparent);color:var(--text)}
+/* ───── swordholder ───── */
+.swconsole{display:grid;grid-template-columns:1.2fr 1fr;gap:18px;align-items:center}
+@media (max-width:820px){.swconsole{grid-template-columns:1fr}}
+.swclock{font:700 34px var(--mono,"Courier New",monospace);letter-spacing:.06em;color:#e5484d}
+.swbtn{display:block;width:100%;margin:12px 0 6px;padding:16px;border-radius:10px;border:2px solid #e5484d;background:radial-gradient(circle at 50% 30%,#7a1d1d,#3a0c0c);color:#fff;font:700 16px var(--mono,"Courier New",monospace);letter-spacing:.14em;text-transform:uppercase;box-shadow:0 0 24px #e5484d55}
+.swbtn:hover{box-shadow:0 0 34px #e5484d99}
+.swlog{min-height:4.5em;font-size:14px;color:#c9cdd9}
+.swbars div{display:grid;grid-template-columns:90px 1fr 46px;gap:8px;align-items:center;margin:6px 0;font-size:13px}
+.swbars i{display:block;height:10px;border-radius:5px;background:var(--c)}
+/* ───── quiz ───── */
+#quiz{max-width:760px;margin:6px auto 30px}
+.qzhead{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.qzcard{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--c,#8fa8ff);border-radius:10px;padding:18px}
+.qzq{font:18px/1.45 Georgia,serif;margin:0 0 14px}
+.qzopts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media (max-width:560px){.qzopts{grid-template-columns:1fr}}
+.qzopt{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#151a28;text-align:left}
+.qzopt:hover:not(:disabled){border-color:#6b77a8}
+.qzopt.right{border-color:#4fc08d;background:color-mix(in srgb,#4fc08d 18%,#151a28)}
+.qzopt.wrong{border-color:#e5484d;background:color-mix(in srgb,#e5484d 18%,#151a28)}
+.qzopt:disabled{cursor:default}
+.qznote{margin:12px 0 0;font-size:13.5px;color:#c3c8da}
+.qzimg{width:96px;height:96px;border-radius:10px;object-fit:cover;float:right;margin:0 0 8px 12px}
+.dossier .qzopt,.dossier .qzcard{border-radius:5px}
+.dossier .qzopt{background:#17160f}
+.dossier .qzopt.right{background:color-mix(in srgb,#4fc08d 20%,#17160f)}.dossier .qzopt.wrong{background:color-mix(in srgb,#e5484d 20%,#17160f)}
+/* ───── solar system map ───── */
+.ssgrid{display:grid;grid-template-columns:1.7fr 1fr;gap:16px;align-items:start}
+@media (max-width:900px){.ssgrid{grid-template-columns:1fr}}
+#ssMap{width:100%;height:auto;display:block;background:#03040a;border-radius:10px}
+@media (max-width:700px){#battle{aspect-ratio:1.25!important}}
+.ssm{cursor:pointer}
+.ssm circle.ring{fill:none;stroke-width:2}
+.ssm:hover circle.ring,.ssm.on circle.ring{stroke-width:3.5}
+#ssInfo .card{margin:0 0 10px}
+.sslegend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);margin-top:8px}
+.sslegend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;background:var(--c)}
+/* ───── shared: stamps, redaction, biology file ───── */
+.stamp{display:inline-block;font:700 10px var(--mono,"Courier New",monospace);letter-spacing:.12em;text-transform:uppercase;color:var(--c);border:1.5px solid var(--c);padding:2px 6px;border-radius:3px;transform:rotate(-2deg);margin-bottom:8px}
+.redact{background:#030303;color:transparent;border-radius:2px;box-shadow:0 0 0 1px #2a2a2a;user-select:none;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.card.bio .btn{margin-top:8px;font-size:12px}
+.bioq{border-top:1px solid var(--line);padding:10px 0}
+.bioq summary{cursor:pointer;font-weight:600;list-style:none}
+.bioq summary::before{content:"? ";color:#f2c14e;font-weight:700} .bioq[open] summary::before{content:"› "}
+.bioq p{margin:6px 0 0 16px;color:#b9bfd3;font-size:13.5px}
+#themeSw{display:flex;gap:2px;padding:2px;border:1px solid var(--line);border-radius:999px;background:var(--panel)}
+#themeSw button{padding:3px 11px;border-radius:999px;font-size:12px;color:var(--muted)}
+#themeSw button[aria-pressed=true]{background:#1d2335;color:var(--text)}
+.dossier #themeSw button{font-family:var(--mono)}
+.dossier #themeSw button[aria-pressed=true]{background:var(--paper);color:#1b170d;font-weight:700}
+/* ───── wallfacer case files ───── */
+.wgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+@media (max-width:820px){.wgrid{grid-template-columns:1fr}}
+@media (max-width:500px){.whead .av{display:none}}
+.wfile{background:var(--panel);border:1px solid var(--line);border-left:4px solid #f2c14e;border-radius:8px;padding:16px 18px}
+.wfile p{margin:4px 0 8px;font-size:14px;color:#c9cdd9}
+.whead{display:flex;align-items:center;gap:12px}
+.whead>div{flex:1;min-width:0}
+.whead>.btn,.whead>.stamp{flex:none;align-self:flex-start}
+.whead h4{margin:2px 0;font:600 20px Georgia,serif}
+.wlabel{font:700 10.5px var(--mono,"Courier New",monospace);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:14px 0 2px}
+.whead .wlabel{margin:0}
+.wlabel.red{color:#e5484d}
+.walias{font:700 13px var(--mono,"Courier New",monospace);letter-spacing:.04em;color:var(--text)!important;margin:2px 0 6px!important}
+.bars span{display:block;height:11px;margin:7px 0;background:#030303;border-radius:2px;box-shadow:0 0 0 1px #2a2a2a}
+.wquote{margin:8px 0;padding:2px 0 2px 12px;border-left:3px solid #e5484d;font:italic 16px/1.5 Georgia,serif;color:var(--text)}
+.dossier .whead h4{font-family:var(--type);font-weight:400}
+.dossier .wfile{background:linear-gradient(180deg,#17160f,#121109);border-radius:5px}
+/* ───── dossier theme (toggle in header) ───── */
+body.dossier{--bg:#0a0a08;--panel:#14130f;--line:#2c2a21;--text:#ece7d8;--muted:#9d977f;--band1:#0d0d0a;--band2:#11100c;--paper:#d9c58f;--stamp:#d4483b;
+  --type:"Special Elite","Courier New",monospace;--mono:"Courier Prime","Courier New",monospace;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .95 0 0 0 0 .8 0 0 0 .055 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),radial-gradient(ellipse at 50% -10%,#211f15 0,transparent 60%),var(--bg)}
+.dossier ::selection{background:var(--paper);color:#111}
+.dossier h1,.dossier .title,.dossier .tale-title,.dossier .sec,.dossier .qbook,.dossier #panel h2,.dossier .drakeN,.dossier #decoder h4{font-family:var(--type);font-weight:400}
+.dossier #tabs button,.dossier .kicker,.dossier .chip,.dossier .card h4,.dossier .tag,.dossier .when,.dossier #panel h3,.dossier .readout,.dossier .btn,.dossier .card .meta,.dossier #disclaimer,.dossier #tip,.dossier .q summary,.dossier .techgroup,.dossier .legend,.dossier .hint,.dossier .era text,.dossier .lane text,.dossier .tick text{font-family:var(--mono)}
+.dossier h1 small{font-size:0}
+.dossier h1 small::after{content:"Case file 3BP-1971 · Eyes only";font:700 10.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--stamp)}
+.dossier #tabs{background:#15140f;border-color:#302d22;border-radius:6px}
+.dossier #tabs button{text-transform:uppercase;letter-spacing:.07em;font-size:12.5px;border-radius:4px}
+.dossier #tabs button.on{background:var(--paper);color:#1b170d;font-weight:700}
+.dossier .kicker::after{content:"Classified";display:inline-block;margin-left:12px;padding:1px 7px;border:1.5px solid var(--stamp);border-radius:3px;color:var(--stamp);font-weight:700;letter-spacing:.18em;transform:rotate(-3deg)}
+.dossier .sec span{display:inline-block;white-space:nowrap;width:auto;height:auto;padding:3px 9px;border-radius:3px;background:none;border:1px solid var(--paper);color:var(--paper);font:400 12px var(--mono);letter-spacing:.14em}
+.dossier .sec span::before{content:"EXHIBIT "}
+.dossier .card,.dossier .q,.dossier .fig,.dossier .matrix td,.dossier #decoder{border-radius:5px}
+.dossier .card{background:linear-gradient(180deg,#17160f,#121109)}
+.dossier .card h4{letter-spacing:.02em}
+.dossier .btn{border-radius:4px;background:#17160f}
+.dossier .btn.on{background:#2d2919;border-color:var(--paper)}
+.dossier #panel{border-left-color:#3a3629}
+.dossier #panel .body::before{content:"▪ File record";display:block;margin-bottom:10px;font:700 10.5px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--stamp)}
+.dossier #tip{border-color:#4a4434}
+.dossier .redact{background:#000}
+
 </style>
 </head>
-<body>
+<body class="dossier">
 <header>
   <h1>Remembrance of Earth's Past<small>Characters · Events · Quotes · Netflix</small></h1>
   <nav id="tabs">
     <button data-view="timeline" class="on">Timeline</button>
     <button data-view="network">Characters</button>
     <button data-view="quotes">Quotes</button>
+    <button data-view="solar">Solar System</button>
     <button data-view="cosmic">Dark Forest</button>
+    <button data-view="wall">Wallfacers</button>
     <button data-view="trisolaris">Trisolarans</button>
     <button data-view="tales">Fairy Tales</button>
   </nav>
+  <div class="hbreak"></div>
   <div id="filters"></div>
+  <div id="themeSw" role="group" aria-label="Theme"><button data-theme="dossier" aria-pressed="true">🗂 Dossier</button><button data-theme="plain" aria-pressed="false">Plain</button></div>
 </header>
 <main>
   <section id="timeline" class="view">
@@ -189,7 +299,8 @@ table.matrix{border-collapse:separate;border-spacing:6px;width:100%;max-width:78
     <div class="legend"></div>
     <div class="hint">Hover to see relationships · click for details · drag nodes · scroll to zoom</div>
   </section>
-  <section id="quotes" class="view" hidden><div class="qwrap"></div></section>
+  <section id="quotes" class="view" hidden><div id="quiz" hidden></div><div class="qwrap"></div></section>
+  <section id="solar" class="view article" hidden><div class="wrap" id="solarWrap"></div></section>
   <!-- ═════════ DARK FOREST ═════════ -->
   <section id="cosmic" class="view article" hidden><div class="wrap">
     <p class="kicker">Fermi paradox · cosmic sociology</p>
@@ -255,7 +366,20 @@ table.matrix{border-collapse:separate;border-spacing:6px;width:100%;max-width:78
       </div>
     </div>
 
-    <h3 class="sec"><span>7</span>How it plays out in the books</h3>
+    <h3 class="sec"><span>7</span>Crisis Year 205: the fleet and the five ships</h3>
+    <p>At the end of Book II the dark forest plays out twice in a few days: first what one droplet does to humanity's fleet, then what the few survivors do to each other.</p>
+    <div class="fig">
+      <canvas id="battle" style="aspect-ratio:2.1"></canvas>
+      <div class="controls">
+        <button class="btn on" data-battle="doom">1 · The Doomsday Battle</button>
+        <button class="btn" data-battle="dark">2 · The Dark Battle</button>
+        <button class="btn" id="bPlay">▶ Play</button>
+        <span class="readout" id="bStat" style="margin-left:auto"></span>
+      </div>
+      <p class="big" id="bCap" style="margin:10px 0 0;min-height:3em"></p>
+    </div>
+
+    <h3 class="sec"><span>8</span>How it plays out in the books</h3>
     <div class="cards">
       <div class="card" style="--c:#4fc08d"><h4>The spell on 187J3X1</h4><p>Luo Ji uses the Sun to broadcast the location of a star about 50 light-years away. Long after, it is found destroyed. The theory is proven.</p><span class="meta">The Dark Forest</span></div>
       <div class="card" style="--c:#4fc08d"><h4>Deterrence</h4><p>Luo Ji rigs nuclear bombs around the Sun to broadcast Trisolaris' location if Trisolaris attacks: mutually assured destruction. It only works while the Swordholder is believed to be willing to press the button.</p><span class="meta">The Dark Forest → Death's End</span></div>
@@ -265,6 +389,8 @@ table.matrix{border-collapse:separate;border-spacing:6px;width:100%;max-width:78
       <div class="card star"><h4>A scarred universe</h4><p>The deepest twist: the universe was once 10-dimensional, with a much faster speed of light. Endless dark-forest warfare used dimensions and light speed as weapons. The physics we know are the ruins of that war.</p><span class="meta">Death's End</span></div>
     </div>
   </div></section>
+
+  <section id="wall" class="view article" hidden><div class="wrap" id="wallWrap"></div></section>
 
   <!-- ═════════ TRISOLARANS ═════════ -->
   <section id="trisolaris" class="view article" hidden><div class="wrap">
@@ -285,6 +411,11 @@ table.matrix{border-collapse:separate;border-spacing:6px;width:100%;max-width:78
         <label class="btn"><input type="checkbox" id="tbTwin"> Butterfly effect: add a twin system offset by 0.000001</label>
         <label>Speed <input type="range" id="tbSpeed" min="1" max="10" value="3"></label>
       </div>
+      <div class="controls" id="tbOrbit" hidden><span class="muted">Planet orbit:</span>
+        <button class="btn" data-orbit="hot">🔥 Hug one sun</button>
+        <button class="btn on" data-orbit="warm">🌍 Habitable distance</button>
+        <button class="btn" data-orbit="cold">❄ Far outside all three</button>
+      </div>
       <div class="two" style="margin-top:12px">
         <div><div class="readout" id="tbStatus"></div><div class="climate"><i id="tbClimate"></i></div>
           <div class="muted" style="font-size:12px;display:flex;justify-content:space-between;max-width:420px"><span>❄ frozen</span><span>habitable</span><span>burning 🔥</span></div></div>
@@ -300,7 +431,21 @@ table.matrix{border-collapse:separate;border-spacing:6px;width:100%;max-width:78
       <div class="card" style="--c:#ff8a3d"><h4>Real Alpha Centauri</h4><p>4.2–4.4 light-years away. Stars A and B orbit each other every ~80 years. Proxima is far out, on an orbit of ~550,000 years. In reality it is fairly stable; the novel exaggerates. Proxima b, a real planet, was found in 2016.</p></div>
     </div>
 
-    <h3 class="sec"><span>2</span>Life under three suns</h3>
+    <h3 class="sec"><span>2</span>The human computer</h3>
+    <p>In the Three Body game, the First Emperor wants the three-body problem solved, and von Neumann has an idea: a computer made of soldiers. Three are enough to show it. Two are inputs, one is the output, and each holds a white and a black flag. The output soldier raises a flag by a fixed rule, and that is a logic gate. <span class="muted">Click the input soldiers. (Here white = 1, black = 0.)</span></p>
+    <div class="fig two">
+      <div><svg id="hcGate" viewBox="0 0 440 210" style="width:100%;height:auto;display:block;background:#03040a;border-radius:10px"></svg>
+        <div class="controls" id="hcModes"><button class="btn on" data-gate="and">AND</button><button class="btn" data-gate="or">OR</button><button class="btn" data-gate="not">NOT</button><button class="btn" data-gate="add">1 + 1 (adder)</button></div></div>
+      <div><div class="readout" id="hcRule"></div><table class="hctable" id="hcTable"></table><p class="muted" id="hcNote" style="font-size:13px"></p></div>
+    </div>
+    <p>Then scale it up. Thirty million soldiers, trained for months, stand on the plain as a giant motherboard. The Emperor raises his sword: <i>“Computer formation!”</i> Flags ripple across the army, and the operating system is called Qin 1.0. When one gate fails, the Emperor has its soldiers beheaded and replaced.</p>
+    <div class="fig">
+      <canvas id="hcArmy" style="aspect-ratio:2.6"></canvas>
+      <div class="controls"><button class="btn" id="hcRun">⚔ “Computer formation!”</button><span class="readout" id="hcStat"></span></div>
+      <p class="muted" style="font-size:12px;margin:8px 0 0">Illustration: each dot is a soldier; regions sketch a motherboard. Not to scale.</p>
+    </div>
+
+    <h3 class="sec"><span>3</span>Life under three suns</h3>
     <div class="cards">
       <div class="card" style="--c:#5fd38d"><h4>Stable Eras</h4><p>The planet orbits one sun steadily for years or centuries. Civilization blooms.</p></div>
       <div class="card" style="--c:#ff5a3c"><h4>Chaotic Eras</h4><p>Suns rise at random. Long freezing nights, or days that burn. When three suns rise together, a “tri-solar day”, the planet is scorched.</p></div>
@@ -312,7 +457,16 @@ table.matrix{border-collapse:separate;border-spacing:6px;width:100%;max-width:78
     </div>
     <p>That is the Trisolarans' motive: their world is a death trap, and Ye Wenjie handed them the address of a planet with one calm sun.</p>
 
-    <h3 class="sec"><span>3</span>Contact and invasion: the 4.2-light-year gap</h3>
+    <h3 class="sec"><span>4</span>The xenobiology file</h3>
+    <p>What do we actually know about the Trisolarans' bodies and minds? Far less than you'd think. Here is every clue, stamped by how much you can trust it. Click <b>Declassify</b> on a redacted file to see what little we have.</p>
+    <div class="controls" id="bioFilters"></div>
+    <div class="cards" id="bioCards"></div>
+    <h4 style="margin:26px 0 4px;font-size:15px">Open questions</h4>
+    <div id="bioQs" style="max-width:780px"></div>
+    <div class="card" style="--c:#f2c14e;margin-top:22px;max-width:780px"><h4>About the “fourth book”</h4><p><b>The Redemption of Time</b> (三体X：观想之宙, 2011) by Baoshu began as fan fiction written after <i>Death's End</i>. It became so popular that it was published officially with Liu Cixin's blessing, and Ken Liu's English translation came out in 2019. It is licensed, but it is Baoshu's story, not Liu's, so most readers treat it as semi-canon at best. Clues from it carry a yellow stamp.</p></div>
+    <p class="muted" style="font-size:12px;margin-top:14px">Sources: the trilogy (Book I; Book II prologue; Book III), <a href="https://www.netflix.com/tudum/articles/3-body-problem-episode-4-recap" style="color:inherit">Netflix Tudum, Episode 4 recap</a>, <a href="https://en.wikipedia.org/wiki/The_Redemption_of_Time" style="color:inherit">Wikipedia, The Redemption of Time</a>, <a href="https://tvtropes.org/pmwiki/pmwiki.php/Literature/RemembranceOfEarthsPast" style="color:inherit">TV Tropes</a>.</p>
+
+    <h3 class="sec"><span>5</span>Contact and invasion: the 4.2-light-year gap</h3>
     <p>Everything moves at or below light speed. Drag the slider or press play. <span class="muted">(Dates approximate.)</span></p>
     <div class="fig">
       <div class="svgscroll"><svg id="gap" viewBox="0 0 900 210" style="width:100%;height:auto;display:block"></svg></div>
@@ -324,7 +478,7 @@ table.matrix{border-collapse:separate;border-spacing:6px;width:100%;max-width:78
       <p class="big" id="gapCaption" style="margin:10px 0 0;min-height:1.5em"></p>
     </div>
 
-    <h3 class="sec"><span>4</span>Sophons: unfolding a proton</h3>
+    <h3 class="sec"><span>6</span>Sophons: unfolding a proton</h3>
     <p>To freeze Earth's science, Trisolaris turns a single proton into a supercomputer. A proton has 11 dimensions, most curled up tiny. Unfold some and it becomes enormous.</p>
     <div class="fig two">
       <svg id="sophonSvg" viewBox="0 0 400 230" style="width:100%;height:auto;background:#03040a;border-radius:10px"></svg>
@@ -336,7 +490,7 @@ table.matrix{border-collapse:separate;border-spacing:6px;width:100%;max-width:78
       </div>
     </div>
 
-    <h3 class="sec"><span>5</span>Technology in the trilogy</h3>
+    <h3 class="sec"><span>7</span>Technology in the trilogy</h3>
     <div id="techCards"></div>
   </div></section>
 
@@ -425,7 +579,13 @@ const tipHide = () => tip.hidden = true;
 /* ───────── timeline ───────── */
 const TL = (() => {
   const svg = d3.select("#timeline svg");
-  const gBand = svg.append("g"), gTick = svg.append("g"), gLane = svg.append("g"), gEv = svg.append("g");
+  // each era gets its own hue: a vertical gradient band plus a solid cap; dots get a soft glow
+  const ERA_COL = ["#b08d57", "#4f86c6", "#c95a4f", "#3fae8c", "#e5533c", "#8f72dd", "#7d8ca6", "#4b82dc", "#36b8c8", "#dcb44c"];
+  svg.append("defs").html(DATA.eras.map((e, i) => `<linearGradient id="eg${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${ERA_COL[i]}" stop-opacity=".26"/><stop offset=".45" stop-color="${ERA_COL[i]}" stop-opacity=".08"/><stop offset="1" stop-color="${ERA_COL[i]}" stop-opacity=".03"/></linearGradient>`).join("") +
+    `<filter id="glow" x="-150%" y="-150%" width="400%" height="400%"><feGaussianBlur stdDeviation="3.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`);
+  const gBand = svg.append("g"), gTick = svg.append("g"), gNow = svg.append("g").attr("class", "now"), gLane = svg.append("g"), gEv = svg.append("g");
+  const NOW = new Date().getFullYear();
+  gNow.append("line"); gNow.append("text").attr("text-anchor", "middle").text(`TODAY · ${NOW}`);
   let W = 0, H = 0, base, zt = d3.zoomIdentity;
   const PAD = 24, TOP = 56, BOT = 52;
   const zoom = d3.zoom().scaleExtent([1, 20000]).on("zoom", e => { zt = e.transform; draw(); });
@@ -461,14 +621,16 @@ const TL = (() => {
     // era bands
     gBand.selectAll("g.era").data(DATA.eras).join(en => {
       const g = en.append("g").attr("class", "era");
-      g.append("rect"); g.append("text").attr("class", "t"); g.append("text").attr("class", "sub");
+      g.append("rect").attr("class", "bg"); g.append("rect").attr("class", "cap"); g.append("text").attr("class", "t"); g.append("text").attr("class", "sub");
       g.on("click", (ev, d) => fit(base(d.from), base(d.to)))
        .on("pointermove", (ev, d) => tipShow(ev, `<b>${d.name}</b> <span class="muted">${d.range}</span><br>${d.note}`)).on("pointerleave", tipHide);
       return g;
     }).each(function (d, i) {
       const x0 = X(d.from), x1 = X(d.to), g = d3.select(this);
       const v0 = Math.max(x0, 0), v1 = Math.min(x1, W), cx = (v0 + v1) / 2, room = v1 - v0;
-      g.select("rect").attr("x", x0).attr("width", Math.max(0, x1 - x0)).attr("y", 0).attr("height", H).attr("fill", i % 2 ? "var(--band2)" : "var(--band1)");
+      g.select(".bg").attr("x", x0).attr("width", Math.max(0, x1 - x0)).attr("y", 0).attr("height", H).attr("fill", `url(#eg${i})`);
+      g.select(".cap").attr("x", x0 + 1).attr("width", Math.max(0, x1 - x0 - 2)).attr("y", 0).attr("height", 3).attr("fill", ERA_COL[i]).attr("opacity", .85);
+      g.select(".t").style("fill", d3.color(ERA_COL[i]).brighter(1.1));
       g.select(".t").attr("x", cx).attr("y", 22).attr("text-anchor", "middle").text(room > d.name.length * 8 ? d.name : room > 24 ? "·" : "");
       g.select(".sub").attr("x", cx).attr("y", 38).attr("text-anchor", "middle").text(room > d.range.length * 6.5 ? d.range : "");
     });
@@ -490,10 +652,17 @@ const TL = (() => {
       .call(g => g.select("line").attr("y1", TOP).attr("y2", H - BOT + 4))
       .call(g => g.select("text").attr("y", H - BOT + 18).text(d => d === 1440 ? "" : d >= 1e5 ? d3.format(",")(d) : d));
 
-    // lanes
+    // today marker
+    const xn = X(NOW);
+    gNow.attr("display", xn < 0 || xn > W ? "none" : null);
+    gNow.select("line").attr("x1", xn).attr("x2", xn).attr("y1", TOP).attr("y2", H - BOT + 4);
+    gNow.select("text").attr("x", Math.min(Math.max(xn, 40), W - 40)).attr("y", TOP + 12);
+
+    // lanes: a soft ribbon in the book's colour behind each line
     gLane.selectAll("g.lane").data([1, 2, 3]).join(en => {
-      const g = en.append("g").attr("class", "lane"); g.append("line"); g.append("text"); return g;
+      const g = en.append("g").attr("class", "lane"); g.append("rect"); g.append("line"); g.append("text"); return g;
     }).attr("opacity", b => S.books.has(b) ? 1 : .25)
+      .call(g => g.select("rect").attr("x", 0).attr("width", W).attr("y", b => laneY(b) - 14).attr("height", 28).attr("fill", b => BOOK[b].color).attr("opacity", .07))
       .call(g => g.select("line").attr("x1", 0).attr("x2", W).attr("y1", laneY).attr("y2", laneY).attr("stroke", b => BOOK[b].color))
       .call(g => g.select("text").attr("x", 10).attr("y", b => laneY(b) - ((H - TOP - BOT - 40) / 3 < 130 ? 34 : 62)).attr("fill", b => BOOK[b].color).text(b => `${BOOK[b].short} · ${BOOK[b].title}`));
 
@@ -502,7 +671,7 @@ const TL = (() => {
     const rows = { 1: [], 2: [], 3: [] }, OFF = tight ? [-14, 26] : [-14, 26, -32, 44];
     gEv.selectAll("g.ev").data(EV.filter(evOn), d => d.id).join(en => {
       const g = en.append("g").attr("class", "ev");
-      g.append("line"); g.append("circle").attr("class", "nfring").attr("r", 11); g.append("circle").attr("class", "dot").attr("r", 7); g.append("text").attr("text-anchor", "middle");
+      g.append("line"); g.append("circle").attr("class", "nfring").attr("r", 11); g.append("circle").attr("class", "dot").attr("r", 7).attr("filter", "url(#glow)"); g.append("text").attr("text-anchor", "middle");
       g.on("click", (ev, d) => openEvent(d.id, false))
        .on("pointermove", (ev, d) => tipShow(ev, `<b>${d.title}</b><br><span class="muted">${d.when}</span>`)).on("pointerleave", tipHide);
       return g;
@@ -612,7 +781,7 @@ function drawQuotes() {
   // all quotes, grouped by book; only the search box filters them
   const qs = DATA.quotes.filter(q => { const c = CH.get(q.who); return hit([q.text.replace(/<[^>]+>/g, " "), q.ctx, q.by, q.why, c?.name, c?.nf?.name].filter(Boolean).join(" ").toLowerCase()); });
   $("#quotes .qwrap").innerHTML = `<div class="qbar"><span class="muted">${qs.length} quote${qs.length === 1 ? "" : "s"} · use the search box to filter</span>
-    <label class="chip" style="--c:#8fa8ff"><input type="checkbox" id="qOpen" ${S.qOpen ? "checked" : ""}>Explain all</label></div>` + (Object.keys(BOOK).map(b => {
+    <span style="display:flex;gap:8px"><button class="btn" data-quiz>🃏 Test yourself</button><label class="chip" style="--c:#8fa8ff"><input type="checkbox" id="qOpen" ${S.qOpen ? "checked" : ""}>Explain all</label></span></div>` + (Object.keys(BOOK).map(b => {
     const list = qs.filter(q => q.book == b);
     return list.length ? `<h2 class="qbook" style="color:${BOOK[b].color}">${BOOK[b].short} · ${BOOK[b].title}</h2><div class="grid">${list.map(card).join("")}</div>` : "";
   }).join("") || `<p class="muted">No quotes match “${S.q.replace(/&/g, "&amp;").replace(/</g, "&lt;")}”.</p>`);
@@ -684,10 +853,23 @@ function refresh(structural) {
   if (structural && S.focus && !panel.hidden) { const f = S.focus; f.type === "c" ? openChar(f.id) : openEvent(f.id, false); }
 }
 window.addEventListener("resize", () => refresh()); // non-structural: redraws the timeline without reshuffling the network
+/* ───────── theme ───────── */
+const themeSw = $("#themeSw");
+function setTheme(t) {
+  document.body.classList.toggle("dossier", t === "dossier");
+  themeSw.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.theme === t));
+  try { localStorage.setItem("theme", t); } catch {}
+}
+let savedTheme = null; try { savedTheme = localStorage.getItem("theme"); } catch {} // new key: old "dossier" off-switches don't carry over
+if (savedTheme === "plain") setTheme("plain"); // dossier is the default, set in <body class>
+themeSw.onclick = e => { const t = e.target.closest("[data-theme]")?.dataset.theme; if (t) { setTheme(t); refresh(); } };
 refresh(true);
 </script>
 <script src="darkforest.js"></script>
+<script src="wallfacers.js"></script>
 <script src="trisolaris.js"></script>
 <script src="fairytales.js"></script>
+<script src="quiz.js"></script>
+<script src="solarsystem.js"></script>
 </body>
 </html>

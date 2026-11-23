@@ -23,12 +23,17 @@
     accel(s);
     for (const b of s) { b.vx += b.ax * DT / 2; b.vy += b.ay * DT / 2; }
   }
-  const planetAround = h => ({ x: h.x + R0, y: h.y, vx: h.vx, vy: h.vy + Math.sqrt(h.m / R0), m: 0, planet: true });
+  const planetAround = (h, r = R0) => ({ x: h.x + r, y: h.y, vx: h.vx, vy: h.vy + Math.sqrt(h.m / r), m: 0, planet: true });
+  // figure-8 planet placements, from long test runs with this same integrator (200 figure-8 laps):
+  // hot  = 0.08 around one sun: stable, but always burning; warm = R0 (habitable distance): swallowed or flung out within ~1 lap;
+  // cold = 3.5 around all three: stable, but always frozen. No placement is both stable and habitable.
+  let orbit = "warm";
   function make(p) {
     let s;
     if (p === "eight") { // initial conditions from Chenciner & Montgomery (2000), Annals of Mathematics 152; orbit first found by C. Moore (1993)
       const x = -0.97000436, y = 0.24308753, vx = -0.93240737, vy = -0.86473146;
       s = [{ x, y, vx: -vx / 2, vy: -vy / 2, m: 1 }, { x: -x, y: -y, vx: -vx / 2, vy: -vy / 2, m: 1 }, { x: 0, y: 0, vx, vy, m: 1 }];
+      s.push(orbit === "cold" ? { x: 3.5, y: 0, vx: 0, vy: Math.sqrt(3 / 3.5), m: 0, planet: true } : planetAround(s[0], orbit === "hot" ? .08 : R0)); // centre of mass is at rest at 0,0
     } else if (p === "sun") {
       s = [{ x: 0, y: 0, vx: 0, vy: 0, m: 1 }]; s.push(planetAround(s[0]));
     } else {
@@ -51,13 +56,24 @@
 
   const INFO = {
     chaos: "Three equal suns, random start. The planet begins in a calm orbit around one sun. How long will it last? Every time the planet dies, civilization restarts, just like in the Three Body game.",
-    eight: "Discovered by computer in 1993: three equal suns chasing each other along a figure-8. It is real and stable, but nature almost never sets up such perfect conditions. No planet could survive here.",
+    eight: "Discovered by computer in 1993: three equal suns chasing each other along a figure-8. It is real and stable, but nature almost never sets up such perfect conditions. Where could a planet live? Try the three orbits.",
     sun: "One sun, one planet. Newton's solution: the same ellipse, forever. A single calm sun is worth crossing 4 light-years for.",
   };
+  const ORBIT_INFO = {
+    hot: "Hugging one sun: in our tests it stays in orbit for 200+ laps of the figure-8. But that close, it is always far too hot. Stable, and dead.",
+    warm: "At the habitable distance (like Earth from the Sun): warm enough for life, but the other two suns pull it off course within about one lap.",
+    cold: "Far outside all three suns: stable for 200+ laps, but the suns shrink to ‘flying stars’ and it freezes forever.",
+  };
+  const showInfo = () => { $id("tbInfo").textContent = INFO[preset] + (preset === "eight" ? " " + ORBIT_INFO[orbit] + " There is no orbit that is both stable and habitable." : ""); };
+  document.querySelectorAll("[data-orbit]").forEach(b => b.onclick = () => {
+    orbit = b.dataset.orbit;
+    document.querySelectorAll("[data-orbit]").forEach(x => x.classList.toggle("on", x === b));
+    showInfo(); restart(false);
+  });
   document.querySelectorAll("[data-preset]").forEach(b => b.onclick = () => {
-    preset = b.dataset.preset;
+    preset = b.dataset.preset; $id("tbOrbit").hidden = preset !== "eight";
     document.querySelectorAll("[data-preset]").forEach(x => x.classList.toggle("on", x === b));
-    $id("tbInfo").textContent = INFO[preset];
+    showInfo();
     $id("tbTwin").disabled = preset !== "chaos"; $id("tbTwin").parentElement.style.opacity = preset === "chaos" ? 1 : .4; // twin compares planets; only the random preset has one
     restart(false);
   });
@@ -89,12 +105,11 @@
       stress = extreme ? stress + speed * 6 * DT : Math.max(0, stress - speed * 3 * DT);
       if (c.dmin < .05) dead = "swallowed by a sun";
       else if (c.far > 6) dead = "flung into deep space";
-      else if (stress > 2 * YEAR) dead = c.f > 3.5 ? "burned by the suns" : "frozen solid";
+      else if (preset === "chaos" && stress > 2 * YEAR) dead = c.f > 3.5 ? "burned by the suns" : "frozen solid"; // climate deaths only end chaos runs; the figure-8 keeps showing a stable-but-dead orbit
       if (dead) dead = { why: dead, at: performance.now(), years: t / YEAR };
     }
     if (c) status = c.f > 3.5 ? "🔥 Burning: suns too close" : c.f < .2 ? "❄ Frozen: the suns are distant ‘flying stars’" : c.dom > .85 ? "☀ Stable Era" : "🌀 Chaotic Era";
     if (preset === "sun") status = "☀ Stable forever: perfectly predictable";
-    if (preset === "eight") status = "No planet: just the three suns' dance";
     $id("tbStatus").textContent = status;
     $id("tbClimate").style.left = c ? `${Math.max(0, Math.min(1, (Math.log10(c.f) + 1.2) / 2.4)) * 100}%` : "50%";
     $id("tbClimate").parentElement.style.opacity = c ? 1 : .3;
@@ -135,9 +150,9 @@
     if (dead) {
       ctx.fillStyle = "#000a"; ctx.fillRect(0, h / 2 - 40, w, 80);
       ctx.fillStyle = "#ff8a3d"; ctx.font = "600 20px Georgia,serif"; ctx.textAlign = "center";
-      ctx.fillText(`Civilization #${civ} destroyed: ${dead.why}`, w / 2, h / 2 - 4);
+      ctx.fillText(preset === "chaos" ? `Civilization #${civ} destroyed: ${dead.why}` : `Planet lost: ${dead.why}`, w / 2, h / 2 - 4);
       ctx.fillStyle = "#c7cbe0"; ctx.font = "13px system-ui";
-      ctx.fillText(`It lasted ${Math.floor(dead.years)} years. Civilization will begin again…`, w / 2, h / 2 + 20);
+      ctx.fillText(preset === "chaos" ? `It lasted ${Math.floor(dead.years)} years. Civilization will begin again…` : `It lasted ${Math.floor(dead.years)} years. Try another orbit.`, w / 2, h / 2 + 20);
       ctx.textAlign = "start";
     }
   }
@@ -236,6 +251,138 @@
   $id("sophonNext").onclick = () => { si = Math.min(SOPH.length - 1, si + 1); drawSophon(); };
   drawSophon();
 
+  /* ───── The xenobiology file: clues stamped by how far you can trust them ───── */
+  const BIO_ST = {
+    canon: ["Canon · the trilogy", "#4fc08d"],
+    show: ["Netflix series", "#e5484d"],
+    baoshu: ["4th book · not canon", "#f2c14e"],
+    rumor: ["Unverified", "#9ca3af"],
+    unknown: ["Redacted · never revealed", "#7d86a8"],
+  };
+  const BIO = [
+    { st: "unknown", t: "Appearance", redacted: "Body plan, size, limbs, eyes, skin",
+      reveal: "The trilogy never describes a Trisolaran body. Not once. We only meet stand-ins: the human avatars of the Three Body game, and Tomoko, a robot built to look like a Japanese woman. Even Yun Tianming, who lives among them for centuries, never tells. <b>Baoshu's answer</b> is in the yellow file below.", src: "All three books" },
+    { st: "canon", t: "Dehydration", src: "The Three-Body Problem",
+      d: "When a Chaotic Era comes, they expel the water from their bodies and dry into light, fibrous husks that can be stored for years or even centuries. Soaked in water when a Stable Era returns, they come back to life. Evolution's answer to a world nobody can predict." },
+    { st: "canon", t: "No organs of speech", src: "The Dark Forest · prologue",
+      d: "They tell Mike Evans they have no organs of communication at all. Their brains give off ‘thought waves’ that others perceive directly, so to them thinking and speaking are the same act. <i>“Human communication organs are but an evolutionary deficiency.”</i>" },
+    { st: "canon", t: "Lying is alien", src: "The Dark Forest · prologue",
+      d: "Evans tells them a fairy tale in which a wolf tricks children into opening the door. They can't follow it: if thoughts are visible, how can a trick work? Once they understand that humans hide their thoughts and deceive, their verdict is: <i>“I am afraid of you.”</i>" },
+    { st: "canon", t: "They learned to lie", src: "Death's End",
+      d: "By the end of the Deterrence Era, “Trisolarans were no longer creatures of transparent thought.” Two centuries of studying human culture taught them strategy: lies, ruses and tricks." },
+    { st: "canon", t: "Reproduction", src: "Death's End",
+      d: "Two partners meld their bodies into one. The combined body then splits into three to five new lives." },
+    { st: "canon", t: "No childhood", src: "Death's End",
+      d: "Newborns inherit part of their parents' memories and are fairly mature from birth: Trisolarans really don't have a childhood. A strange audience for Tianming's fairy tales." },
+    { st: "canon", t: "Emotion as weakness", src: "The Three-Body Problem",
+      d: "Civilization after civilization destroyed by its suns produced a society where survival comes first and the individual counts for almost nothing. Emotion is a weakness. Yet Listener 1379 pities Earth enough to warn it. The feelings exist; they are just dangerous." },
+    { st: "show", t: "The San-Ti", src: "3 Body Problem · S1E4 “Our Lord”",
+      d: "The series calls them San-Ti (三体, ‘three bodies’) and never shows them either. Mike Evans reads them <i>Little Red Riding Hood</i>, and they decide it is ‘a lie about a liar’. Their conclusion: <i>“A liar cannot be trusted. We are afraid of you.”</i> The show implies they communicate by thought but never confirms it." },
+    { st: "baoshu", t: "The size of a grain of rice", src: "The Redemption of Time",
+      d: "Tianming becomes the first human to see a Trisolaran. They are tiny, about the size of a grain of rice. The species that called humanity ‘bugs’ is, physically, the bug." },
+    { st: "baoshu", t: "A human brain as a textbook", src: "The Redemption of Time",
+      d: "Tianming's captured brain was their only human specimen. They studied his mind to learn how humans think, and how they deceive." },
+    { st: "unknown", t: "Lifespan", redacted: "Natural lifespan in Earth years",
+      reveal: "Never stated in the trilogy. Fan wikis often quote 70–80 Earth years, not counting time spent dehydrated, but we couldn't trace that number to the books. <b>Treat it as a rumor.</b>", src: "—" },
+    { st: "unknown", t: "Senses", redacted: "Vision, hearing, range of thought waves",
+      reveal: "Unknown. They watch their sky closely enough to fear ‘flying stars’, so they sense light somehow, but the books never say how. Nor how far thought waves reach.", src: "—" },
+    { st: "rumor", t: "Mirror skin?", src: "Fan wikis",
+      d: "Fan wikis claim that one earlier Trisolaran civilization had reflective, mirror-like skin to survive the glare of several suns. A neat idea, but we couldn't find the passage in the books. Unconfirmed." },
+  ];
+  const bioOn = new Set(Object.keys(BIO_ST)), declassified = new Set();
+  $id("bioFilters").innerHTML = Object.entries(BIO_ST).map(([k, [l, c]]) => `<label class="chip" style="--c:${c}"><input type="checkbox" data-st="${k}" checked><i></i>${l}</label>`).join("");
+  function drawBio() {
+    $id("bioCards").innerHTML = BIO.map((b, i) => !bioOn.has(b.st) ? "" :
+      `<div class="card bio" style="--c:${BIO_ST[b.st][1]}"><span class="stamp">${BIO_ST[b.st][0]}</span><h4>${b.t}</h4>
+        ${b.redacted && !declassified.has(i) ? `<p><span class="redact">${b.redacted}</span></p><button class="btn" data-decl="${i}">Declassify</button>` : `<p>${b.d || b.reveal}</p>`}
+        <span class="meta">${b.src}</span></div>`).join("") || `<p class="muted">No files match these filters.</p>`;
+  }
+  $id("bioFilters").onchange = e => { const k = e.target.dataset.st; if (k) { e.target.checked ? bioOn.add(k) : bioOn.delete(k); drawBio(); } };
+  $id("bioCards").onclick = e => { const b = e.target.closest("[data-decl]"); if (b) { declassified.add(+b.dataset.decl); drawBio(); } };
+  drawBio();
+  const QS = [
+    ["If their thoughts are visible, how did they learn to lie?", "Death's End says they learned strategy from human culture. It never explains whether they also learned to hide their thoughts from each other, or only to deceive humans."],
+    ["What do they look like?", "The trilogy keeps it secret, perhaps on purpose. Baoshu's tiny Trisolarans are one answer; Liu Cixin never gave his."],
+    ["Why call humans ‘bugs’?", "In Book I it's psychological warfare, and it backfires: bugs have never been defeated. Baoshu adds the irony that they are the small ones."],
+    ["What does a species with no childhood make of fairy tales?", "Maybe that's part of why Tianming's tales slipped past them. See the Fairy Tales tab."],
+    ["Can they feel love or loyalty?", "Listener 1379's pity says at least some of them can. Their society just treats it as a defect."],
+    ["What became of them after their star was destroyed?", "The trilogy barely follows what is left of Trisolaran civilization once its sun dies. The series may tell its own version."],
+  ];
+  $id("bioQs").innerHTML = QS.map(([q, a]) => `<details class="bioq"><summary>${q}</summary><p>${a}</p></details>`).join("");
+
+  /* ───── The human computer: soldiers as logic gates, then the whole army ───── */
+  const GATES = {
+    and: { rule: "AND: raise white only if both inputs raise white.", ins: 2, outs: [["Output", (a, b) => a & b]] },
+    or: { rule: "OR: raise white if at least one input raises white.", ins: 2, outs: [["Output", (a, b) => a | b]] },
+    not: { rule: "NOT: raise the opposite of the input.", ins: 1, outs: [["Output", a => 1 - a]] },
+    add: { rule: "Adding 1 + 1 with four soldiers. SUM raises white if exactly one input is white (an XOR rule); CARRY raises white if both are (an AND rule).",
+      ins: 2, outs: [["Sum", (a, b) => a ^ b], ["Carry", (a, b) => a & b]] },
+  };
+  let gateType = "and", ins = [1, 0], pending = false;
+  const soldier = (x, flag, label, inIdx) => {
+    const col = flag === null ? "#555" : flag ? "#f4f1e8" : "#141414";
+    return `<g class="hcs${inIdx != null ? " hcin" : ""}" ${inIdx != null ? `data-in="${inIdx}"` : ""} transform="translate(${x},150)">
+      <rect x="-22" y="-118" width="80" height="150" fill="transparent"/>
+      <line x1="14" y1="-26" x2="${flag === null ? 30 : 20}" y2="${flag === null ? -50 : -96}" stroke="#9a8466" stroke-width="3" stroke-linecap="round"/>
+      <path class="hcflag" d="M${flag === null ? "30,-50 q10,6 22,4 v14 q-12,2 -22,-4z" : "20,-96 q14,-6 30,0 v20 q-16,6 -30,0z"}" fill="${col}" stroke="#8a8a8a" stroke-width="1"/>
+      <circle cx="0" cy="-40" r="9" fill="#d4b98c"/>
+      <path d="M-12,-28 h24 l5,42 h-34z" fill="#8a5a2e"/>
+      <text y="34" text-anchor="middle" fill="#c7cbe0" font-size="12">${label}</text>
+      <text x="34" y="${flag === null ? -28 : -72}" fill="#f2c14e" font-size="13" font-weight="700">${flag === null ? "…" : flag}</text></g>`;
+  };
+  function drawGate() {
+    const g = GATES[gateType], vals = g.ins === 1 ? [ins[0]] : ins, outs = g.outs.map(([, f]) => f(...vals));
+    const inX = g.ins === 1 ? [90] : gateType === "add" ? [50, 135] : [60, 150], outX = gateType === "add" ? [300, 385] : [340];
+    const arrows = outX.map(ox => inX.map(ix => `<path d="M${ix + 30},120 C${(ix + ox) / 2},${120} ${(ix + ox) / 2},120 ${ox - 30},120" stroke="#3a4260" stroke-dasharray="4 4" fill="none"/>`).join("")).join("");
+    $id("hcGate").innerHTML = arrows + inX.map((x, i) => soldier(x, vals[i], g.ins === 1 ? "Input" : `Input ${i + 1}`, i)).join("") +
+      outX.map((x, i) => soldier(x, pending ? null : outs[i], g.outs[i][0])).join("");
+    $id("hcRule").textContent = g.rule;
+    const rows = g.ins === 1 ? [[0], [1]] : [[0, 0], [0, 1], [1, 0], [1, 1]];
+    $id("hcTable").innerHTML = `<tr>${(g.ins === 1 ? ["In"] : ["In 1", "In 2"]).map(h => `<th>${h}</th>`).join("")}${g.outs.map(([n]) => `<th>${n}</th>`).join("")}</tr>` +
+      rows.map(r => `<tr class="${r.every((v, i) => v === vals[i]) ? "on" : ""}">${r.map(v => `<td>${v}</td>`).join("")}${g.outs.map(([, f]) => `<td>${f(...r)}</td>`).join("")}</tr>`).join("");
+    $id("hcNote").textContent = gateType === "add" ? `${vals[0]} + ${vals[1]} = ${outs[1]}${outs[0]} in binary (carry, then sum). Chain enough of these and an army can do arithmetic.` :
+      "Von Neumann uses these same three soldiers to show every basic gate. Everything a computer does is built from them.";
+  }
+  $id("hcGate").onclick = e => {
+    const s = e.target.closest("[data-in]"); if (!s || pending) return;
+    ins[+s.dataset.in] ^= 1; pending = true; drawGate();
+    setTimeout(() => { pending = false; drawGate(); }, 420); // the output soldier needs a moment to react
+  };
+  $id("hcModes").onclick = e => {
+    const b = e.target.closest("[data-gate]"); if (!b) return;
+    gateType = b.dataset.gate; document.querySelectorAll("[data-gate]").forEach(x => x.classList.toggle("on", x === b)); drawGate();
+  };
+  drawGate();
+
+  // the army: a field of flags that ripples while Qin 1.0 runs, then the tri-solar syzygy
+  const army = $id("hcArmy");
+  let run = null; // { t0 } while running
+  const hash = (x, y) => { const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return s - Math.floor(s); };
+  function drawArmy(t) {
+    if (!visible(army)) return;
+    const f = fitCanvas(army); if (!f) return;
+    const { ctx, w, h } = f, G = 7, cols = Math.floor((w - 20) / G), rows = Math.floor((h - 20) / G), ox = (w - cols * G) / 2, oy = (h - rows * G) / 2;
+    const el = run ? (t - run.t0) / 1000 : 0, month = Math.min(16, el), done = run && el > 16, flash = run && el > 18.5 ? Math.min(1, (el - 18.5) / .8) : 0;
+    ctx.fillStyle = "#03040a"; ctx.fillRect(0, 0, w, h);
+    const cpu = [cols * .38, rows * .28, cols * .62, rows * .72];
+    for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+      const inCpu = x > cpu[0] && x < cpu[2] && y > cpu[1] && y < cpu[3], bus = (y % 8 === 0 && !inCpu) || (x % 14 === 0 && !inCpu);
+      let on = 0;
+      if (run && !done) on = Math.sin(x * .35 - el * (inCpu ? 9 : 5) + hash(x, y) * (inCpu ? 6 : 2.5) + (bus ? y : 0)) > (inCpu ? 0 : .55) ? 1 : 0;
+      ctx.fillStyle = on ? (inCpu ? "#fff6d8" : "#e9e4d4") : bus ? "#2a2c33" : inCpu ? "#2b2618" : "#1a1c24";
+      ctx.fillRect(ox + x * G, oy + y * G, 3, 3);
+    }
+    ctx.strokeStyle = "#f2c14e66"; ctx.strokeRect(ox + cpu[0] * G - 4, oy + cpu[1] * G - 4, (cpu[2] - cpu[0]) * G + 4, (cpu[3] - cpu[1]) * G + 4);
+    ctx.fillStyle = "#f2c14e"; ctx.font = "11px system-ui"; ctx.fillText("CPU", ox + cpu[0] * G, oy + cpu[1] * G - 8);
+    if (flash) { ctx.fillStyle = `rgba(255,236,190,${flash * .85})`; ctx.fillRect(0, 0, w, h); }
+    if (!run) $id("hcStat").textContent = "30,000,000 soldiers, standing by.";
+    else if (!done) $id("hcStat").textContent = `Qin 1.0 running · month ${Math.max(1, Math.ceil(month))} of 16`;
+    else if (el < 18.5) $id("hcStat").textContent = "Result after 16 months: a year-long Stable Era ahead. The Emperor celebrates.";
+    else $id("hcStat").textContent = "Then the three suns line up: a tri-solar syzygy. Civilization #184 is destroyed.";
+    if (run && el > 21) { run = null; $id("hcRun").textContent = "↺ Run it again"; }
+  }
+  $id("hcRun").onclick = () => { run = { t0: performance.now() }; $id("hcRun").textContent = "⚔ Running…"; };
+
   /* ───── 5. Technology cards ───── */
   const TECH = {
     "Trisolaran": ["#c084fc", [
@@ -268,5 +415,5 @@
       `<div class="card" style="--c:${col}"><h4>${n}</h4><p>${d}</p><span class="meta">Book ${b}</span></div>`).join("")}</div>`).join("");
 
   const gate = frameGate();
-  (function loop(t) { requestAnimationFrame(loop); if (gate(t)) { drawSim(); tickGap(); } })(0);
+  (function loop(t) { requestAnimationFrame(loop); if (gate(t)) { drawSim(); tickGap(); drawArmy(t); } })(0);
 })();

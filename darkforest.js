@@ -205,6 +205,119 @@
     $id("fStats").textContent = `Revealed: ${sent} · Destroyed: ${killed}${spellTarget && !spellTarget.alive && earthStar.alive ? " · The spell worked, and Earth was never revealed." : ""}`;
   }
 
+  /* ───── 7. Crisis Year 205: the Doomsday Battle, then the Dark Battle ───── */
+  const bcv = $id("battle");
+  let bMode = "doom", doom, dark;
+  const seeded = n => { const s = Math.sin(n * 91.7) * 43758.5; return s - Math.floor(s); };
+  function resetDoom() {
+    const grid = [];
+    for (let r = 0; r < 20; r++) for (let c = 0; c < 100; c++) grid.push({ x: .07 + c / 99 * .86, y: .2 + r / 19 * .56, r, c });
+    // Quantum and Bronze Age sat at the far corner, already in deep-sea state
+    const esc = grid.filter(s => s.r === 19 && s.c >= 98); esc[0].name = "Quantum"; esc[1].name = "Bronze Age"; esc.forEach(s => s.esc = true);
+    const extra = Array.from({ length: 15 }, (_, i) => ({ x: .1 + seeded(i + 1) * .8, y: seeded(i + 40) < .5 ? .1 + seeded(i + 7) * .06 : .82 + seeded(i + 9) * .07 }));
+    // the droplet rams through row after row, starting with the first row's hundred ships
+    const order = [];
+    for (let r = 0; r < 20; r++) { const row = grid.filter(s => s.r === r && !s.esc); order.push(...(r % 2 ? row.reverse() : row)); }
+    order.push(...extra);
+    doom = { ships: [...grid, ...extra], order, k: 0, playing: false, booms: [], escT: 0, done: false };
+  }
+  const DOOM_CAP = [
+    [0, "Crisis Year 205. Humanity's Combined Fleet, 2,015 warships, 2,000 of them in a 100 × 20 grid, meets the first Trisolaran arrival: one droplet, captured by the probe Mantis."],
+    [.01, "The droplet wakes, destroys Mantis, and rams through the first row: 100 warships in 1 minute 18 seconds."],
+    [600, "About 13 minutes in, two crew members finally identify the attacker. Over 600 ships are already gone. Lasers and railguns barely slow it."],
+    [1000, "After 20 minutes: over 1,000 ships destroyed."],
+    [2013, "2,013 warships destroyed. Only Quantum and Bronze Age, already in ‘deep-sea state’ at the far corner, escape at full acceleration."],
+  ];
+  const DARK_CAP = [
+    "Five ships flee into deep space: Natural Selection, which Zhang Beihai hijacked before the battle, and the four sent to chase it: Blue Space, Enterprise, Deep Space and Ultimate Law. There aren't enough supplies for all five to reach another star.",
+    "Every captain does the same math: strike first and take the others' fuel and parts, or be struck. Nobody can know what the others will do. A chain of suspicion, inside one small fleet.",
+    "Ultimate Law fires first: infrasonic hydrogen bombs, which kill the crews and leave the ships intact. Natural Selection goes dark, Zhang Beihai with it.",
+    "Blue Space was ready: its crew had let the air out and sealed themselves in suits, and with no air the bombs' sound can't kill them. It fires back with lasers and destroys Ultimate Law.",
+    "Blue Space strips the dead ships and flies on alone. Far away, Bronze Age does the same to Quantum. No one here is evil; every crew did what survival seemed to demand.",
+  ];
+  const DARK_SHIPS = [["Natural Selection", .5, .22], ["Blue Space", .8, .46], ["Enterprise", .68, .8], ["Deep Space", .32, .8], ["Ultimate Law", .2, .46]];
+  const resetDark = () => { dark = { step: 0, t0: performance.now() }; };
+  function setBattle(m) {
+    bMode = m; document.querySelectorAll("[data-battle]").forEach(b => b.classList.toggle("on", b.dataset.battle === m));
+    m === "doom" ? resetDoom() : resetDark();
+    $id("bPlay").textContent = m === "doom" ? "▶ Play" : "Next ▸";
+    $id("bCap").textContent = m === "doom" ? DOOM_CAP[0][1] : DARK_CAP[0];
+  }
+  document.querySelectorAll("[data-battle]").forEach(b => b.onclick = () => setBattle(b.dataset.battle));
+  $id("bPlay").onclick = () => {
+    if (bMode === "doom") { if (doom.done || doom.playing) resetDoom(); doom.playing = true; $id("bPlay").textContent = "↺ Replay"; return; }
+    if (dark.step >= DARK_CAP.length - 1) resetDark(); else { dark.step++; dark.t0 = performance.now(); }
+    $id("bCap").textContent = DARK_CAP[dark.step];
+    $id("bPlay").textContent = dark.step >= DARK_CAP.length - 1 ? "↺ Replay" : "Next ▸";
+  };
+  setBattle("doom");
+
+  function drawBattle(t) {
+    if (!visible(bcv)) return;
+    const f = fitCanvas(bcv); if (!f) return;
+    const { ctx, w, h } = f, P = s => [s.x * w, s.y * h];
+    ctx.fillStyle = "#03040a"; ctx.fillRect(0, 0, w, h);
+    if (bMode === "doom") {
+      const d = doom, n = d.order.length;
+      if (d.playing && !d.done) {
+        const prev = Math.floor(d.k);
+        d.k = Math.min(n, d.k + (d.k < 100 ? .55 : 2.4));
+        for (let i = prev; i < Math.floor(d.k); i++) { const s = d.order[i]; s.dead = true; d.booms.push({ x: s.x, y: s.y, life: 1 }); }
+        if (d.k >= n) d.done = true;
+      }
+      if (d.playing) d.escT += 1;
+      for (const s of d.ships) {
+        let [x, y] = P(s);
+        if (s.esc && d.playing) { const a = d.escT * d.escT * .0009; x += a * 1.4; y += a; }
+        ctx.fillStyle = s.dead ? "#3a2a2a" : s.esc ? "#7ef0c0" : "#9fb3d8";
+        ctx.fillRect(x - 1, y - 1, s.dead ? 1.5 : 2.2, s.dead ? 1.5 : 2.2);
+        if (s.esc && x < w + 60) { ctx.fillStyle = "#7ef0c0"; ctx.font = "11px system-ui"; ctx.fillText(s.name, x - (s.name === "Quantum" ? 52 : 58), y + (s.name === "Quantum" ? -6 : 14)); }
+      }
+      d.booms = d.booms.filter(b => (b.life -= .03) > 0);
+      for (const b of d.booms) { ctx.beginPath(); ctx.arc(b.x * w, b.y * h, 2 + (1 - b.life) * 7, 0, 7); ctx.fillStyle = `rgba(255,190,120,${b.life * .8})`; ctx.fill(); }
+      // the droplet sits at the ship it is passing through; before the battle, beside Mantis
+      const i = Math.min(n - 1, Math.floor(d.k)), tgt = d.playing ? d.order[i] : { x: .04, y: .13 };
+      const [dx, dy] = P(tgt), g = ctx.createRadialGradient(dx, dy, 0, dx, dy, 12);
+      g.addColorStop(0, "#ffffff"); g.addColorStop(.35, "#cfe6ff"); g.addColorStop(1, "transparent");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(dx, dy, 12, 0, 7); ctx.fill();
+      if (!d.playing) { ctx.fillStyle = "#8a90a6"; ctx.fillRect(dx + 10, dy - 2, 6, 4); ctx.font = "11px system-ui"; ctx.fillText("droplet + Mantis", dx + 20, dy + 4); }
+      $id("bStat").textContent = `Warships destroyed: ${Math.floor(d.k).toLocaleString()} / 2,013`;
+      $id("bCap").textContent = DOOM_CAP.filter(([k]) => (d.playing ? d.k : -1) >= k).at(-1)?.[1] || DOOM_CAP[0][1];
+    } else {
+      const s = dark.step, p = Math.min(1, (performance.now() - dark.t0) / 1400);
+      const pos = DARK_SHIPS.map(([, x, y], i) => [x * w + Math.sin(t / 900 + i) * 3, y * h + Math.cos(t / 1100 + i) * 3]);
+      const dead = i => i !== 1 && i !== 4 && (s > 2 || (s === 2 && Math.hypot(pos[i][0] - pos[4][0], pos[i][1] - pos[4][1]) < p * w * .7));
+      if (s === 1) { // the web of suspicion
+        ctx.setLineDash([4, 6]); ctx.strokeStyle = `rgba(229,72,77,${.25 + .2 * Math.sin(t / 300)})`;
+        pos.forEach((a, i) => pos.forEach((b, j) => { if (j > i) { ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.stroke(); } }));
+        ctx.setLineDash([]);
+      }
+      if (s === 2) for (let k = 0; k < 3; k++) { const r = (p * w * .7 - k * 30); if (r > 0) { ctx.beginPath(); ctx.arc(...pos[4], r, 0, 7); ctx.strokeStyle = `rgba(242,193,78,${.5 * (1 - p)})`; ctx.lineWidth = 2; ctx.stroke(); ctx.lineWidth = 1; } }
+      if (s === 3) { ctx.strokeStyle = "#ff6b4a"; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(...pos[1]); ctx.lineTo(pos[1][0] + (pos[4][0] - pos[1][0]) * Math.min(1, p * 2), pos[1][1] + (pos[4][1] - pos[1][1]) * Math.min(1, p * 2)); ctx.stroke(); ctx.lineWidth = 1; }
+      const ulGone = s > 3 || (s === 3 && p > .55), bsX = s === 4 ? p * p * w * .5 : 0;
+      if (s === 3 && p > .5) { ctx.beginPath(); ctx.arc(...pos[4], 6 + (p - .5) * 60, 0, 7); ctx.fillStyle = `rgba(255,190,120,${1 - p})`; ctx.fill(); }
+      if (s === 4) { ctx.strokeStyle = `rgba(127,184,224,${.6 * (1 - p)})`; [0, 2, 3].forEach(i => { ctx.beginPath(); ctx.moveTo(pos[1][0] + bsX, pos[1][1]); ctx.lineTo(...pos[i]); ctx.stroke(); }); }
+      DARK_SHIPS.forEach(([name], i) => {
+        if (i === 4 && ulGone) return;
+        let [x, y] = pos[i]; if (i === 1) x += bsX;
+        const isDead = dead(i);
+        if (i === 1 && s >= 2) { ctx.beginPath(); ctx.arc(x, y, 15, 0, 7); ctx.strokeStyle = "#5aa9e6aa"; ctx.stroke(); }
+        ctx.fillStyle = isDead ? "#4a4f5e" : i === 1 ? "#7fb8e0" : i === 4 ? "#f2c14e" : "#dfe3ef";
+        ctx.beginPath(); ctx.moveTo(x + 11, y); ctx.lineTo(x - 8, y - 5); ctx.lineTo(x - 5, y); ctx.lineTo(x - 8, y + 5); ctx.fill();
+        ctx.fillStyle = isDead ? "#6b7080" : "#c7cbe0"; ctx.font = "12px system-ui"; ctx.textAlign = "center";
+        ctx.fillText(name + (isDead ? " · crew dead" : ""), x, y + 24);
+        if (s === 1) { ctx.fillStyle = "#e5484d"; ctx.font = "700 14px system-ui"; ctx.fillText("?", x, y - 12); }
+        if (i === 1 && s === 2) { ctx.fillStyle = "#5aa9e6"; ctx.font = "11px system-ui"; ctx.fillText("vented · crew in suits", x, y - 20); }
+        ctx.textAlign = "start";
+      });
+      // supplies: enough for one ship of five
+      ctx.fillStyle = "#8a90a6"; ctx.font = "11px system-ui"; ctx.fillText("Supplies: enough for 1 ship of 5", 14, 20);
+      ctx.fillStyle = "#222839"; ctx.fillRect(14, 28, 150, 8); ctx.fillStyle = "#f2c14e"; ctx.fillRect(14, 28, 30, 8);
+      $id("bStat").textContent = `Step ${s + 1} of ${DARK_CAP.length}`;
+      $id("bCap").textContent = DARK_CAP[s];
+    }
+  }
+
   const gate = frameGate();
-  (function loop(t) { requestAnimationFrame(loop); if (gate(t)) { drawGalaxy(t); drawForest(t); } })(0);
+  (function loop(t) { requestAnimationFrame(loop); if (gate(t)) { drawGalaxy(t); drawForest(t); drawBattle(t); } })(0);
 })();
